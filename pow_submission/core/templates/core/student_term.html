@@ -1,0 +1,42 @@
+{% extends "base_header.html" %}
+{% block content %}
+{% load static %}
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<link rel="stylesheet" href="{% static 'core/table.css' %}">
+
+<form action="/student/term/{{tp.pk}}/" method="post">
+  <div class="container">
+  <div class="container, form-group">
+      {% csrf_token %}
+    <div class="row">
+      <div class="col-6">
+        <h4>Track: {{track.label}} starting {{track.startTerm.label}}</h4>
+        <h4>Term: {{tp.term.label}}</h4>
+        <h5>Student: {{tp.student.email}}</h5>
+        <label for="advisorEmail">Advisor Email: </label>
+        <input type="text" name="advisorEmail"/>
+      </div>
+    </div>
+    {% for category in categories %}
+      <table class=" table-sm w-auto">
+        <thead><tr><th scope="col">{{category.label}}</th></tr></thead>
+        {% for course_field, checkbox, offering_field in form.get_course_fields %}
+          {% if category.label|stringformat:"s" in course_field.name %}
+            <tr>
+              <td> {{ course_field }}</td>
+              {% if checkbox != None %}
+                <td> {{ checkbox }} </td>
+                <td> {{ offering_field }} </td>
+              {% endif %}
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </table>
+    {% endfor %}
+  </div>
+  <button class="btn btn-primary" type="submit" name="Save">Save</button>
+  <button class="btn btn-primary" type="submit" name="SaveSubmit">Save and Submit</button>
+  </div>
+</form>
+<script type="text/javascript" src = "{% static 'core/dynamic_list.js' %}"></script>
+{% endblock %}

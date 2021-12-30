@@ -1,0 +1,9 @@
+[{
+  "fields": {
+    "text": "A very basic question",
+    "order": 1.2,
+    "label": "neveruse",
+    "type": "core.yesnoquestion"
+  },
+  "model": "core.question"
+}]

@@ -1,0 +1,82 @@
+{% extends "base_header.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'core/table.css' %}">
+
+{% if user.is_authenticated %}
+<div class="container">
+  <div class="row">
+    <div class="col-6">
+      <h4>Your Term Plans</h4>
+      <table>
+      {% for tp in termPlans%}
+        <tr>
+          <td>&#8226;</td>
+          <td>
+            <a href="{% url 'student_term' termPlan_id=tp.pk %}">{{tp.term.label}}</a> 
+          </td>
+          <td class="
+            {% if tp.approval == "Approved"  %}alert-success{% endif %}
+            {% if tp.approval == "Submitted" %}alert-warning{% endif %}
+            {% if tp.approval == "Temp Approved" %}alert-primary{% endif %}
+            {% if tp.approval == "" %}{% endif %}"
+            >{{tp.approval}}
+          </td>
+        </tr>
+      {% endfor %}
+      </table>
+    </div>
+    <div class="col-6">
+      <h4>Create a Term Plan</h4>
+      <form action="/term/new" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="term_id">Term</label>
+          <select class="form-control" name="term_id" id="term_selection">
+              <option value="" selected="selected">---SELECT---</option>
+              {% for t in terms %}
+               <option value="{{t.id}}">{{t.label}}</option>
+              {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit" name="Start">Start</button>
+      </form>
+    </div>
+  </div>
+  <table class="col-12">
+    {% for category in categories %}
+      <tr><td><h5>{{category.label}}</h5></td></tr>
+      {% for termPlan in termPlans %}
+        {% for plannedWork in termPlan.plannedWorks.all %}
+          {% if category in plannedWork.course.categories.all %}
+            <tr class =
+              {% if termPlan.approval == "Approved"  %}"alert-success{% endif %}
+              {% if termPlan.approval == "Submitted" %}"alert-warning{% endif %}
+              {% if termPlan.approval == "" %}"{% endif %}">
+              <td>{{plannedWork.course.label}}</td>
+              {% if plannedWork.offering != None %}
+                <td>{{plannedWork.offering}}</td>
+              {% else %}
+                <td/>
+              {% endif %}
+            <tr>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    {% endfor %}
+  
+  </table>
+</div>
+{% else %}
+<div class="container">
+  <div class="jumbotron text-center">
+    <h1 class="display-4">Plan of Work Submission</h1>
+    <p class="lead">A form for submitting student plan of work documents.</p>
+    <hr class="my-4">
+    <p>Please log in with your UAMS credentials.</p>
+    <a class="btn btn-primary btn-lg" href="/accounts/login/">Login</a>
+    <a class="btn btn-secondary btn-lg" href="/accounts/register/">Register</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

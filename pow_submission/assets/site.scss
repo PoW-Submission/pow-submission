@@ -1,0 +1,34 @@
+$theme-colors: (
+  "uamsred": #8C1E15
+);
+
+.navbar {
+  margin-bottom: 1em;
+}
+
+@media (max-width: 767.98px) {
+ .small_form {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .small_form {
+    transform: scale(.6);
+    transform-origin: left top;
+  }
+}
+
+@media (min-width: 992px){
+  .small_form {
+    transform: scale(.7);
+    transform-origin: right top;
+  }
+}
+
+@import "~bootstrap/scss/bootstrap";
+@import "~trix/dist/trix.css";
+
+trix-toolbar .trix-button-group--file-tools {
+  display: none;
+}

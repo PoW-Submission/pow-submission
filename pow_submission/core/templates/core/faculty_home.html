@@ -1,0 +1,36 @@
+{% extends "base_header.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'core/table.css' %}">
+
+{% if user.is_authenticated %}
+<div class="container">
+  <div class="row">
+    <div class="col-6">
+      <h4>Your Students</h4>
+      <table>
+      {% for student in students%}
+        <tr>
+          <td>&#8226;</td>
+          <td>
+            <a href="{% url 'student_overview' student_id=student.pk %}">{{student.email}}</a> 
+          </td>
+        </tr>
+      {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="container">
+  <div class="jumbotron text-center">
+    <h1 class="display-4">Plan of Work Submission</h1>
+    <p class="lead">A form for submitting student plan of work documents.</p>
+    <hr class="my-4">
+    <p>Please log in with your UAMS credentials.</p>
+    <a class="btn btn-primary btn-lg" href="/accounts/login/">Login</a>
+    <a class="btn btn-secondary btn-lg" href="/accounts/register/">Register</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

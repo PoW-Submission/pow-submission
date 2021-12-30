@@ -1,0 +1,18 @@
+#questionnaire_container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+}
+
+#question_container {
+  display: flex;
+  flex-direction: column;
+}
+
+#left_side_questions {
+  max-width: 40%;
+}
+
+.form_fields ul {
+  list-style: none;
+}

@@ -1,0 +1,43 @@
+{% extends "base_header.html" %}
+{% block content %}
+{% load static %}
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<link rel="stylesheet" href="{% static 'core/table.css' %}">
+
+<div class="container">
+  <div class="container, form-group">
+      {% csrf_token %}
+    <div class="row">
+      <div class="col-6">
+        <h4>Track: {{track.label}} starting {{track.startTerm.label}}</h4>
+        <h4>Term: {{tp.term.label}}</h4>
+        <h5>Student: {{tp.student.email}}</h5>
+      </div>
+    </div>
+    {% for category in categories %}
+      <table class=" table-sm w-auto">
+        <thead><tr><th scope="col">{{category.label}}</th></tr></thead>
+        {% for plannedWork in tp.plannedWorks.all %}
+          <tr>
+            <td> {{ plannedWork.course}}</td>
+            <td> {{ offering_field }} </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% endfor %}
+  </div>
+  <div class='btn-group'>
+    <form action="/faculty/approve/{{ tp.pk }}/A/" method="post">
+      {% csrf_token %}
+      <button class="btn btn-primary mr-1" type="submit" name="Approve">Approve</button>
+    </form>
+    </div>
+    <div class='btn-group'>
+    <form action="/faculty/approve/{{ tp.pk }}/TA/" method="post">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit" name="TempApprove">Temp Approve</button>
+    </form>
+  </div>
+</div>
+<script type="text/javascript" src = "{% static 'core/dynamic_list.js' %}"></script>
+{% endblock %}

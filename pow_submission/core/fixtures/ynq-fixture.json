@@ -1,0 +1,11 @@
+[
+{
+  "fields": {
+    "id": 1,
+    "order": 1.124,
+    "text": "This is a yesno question",
+    "label": "yn1",
+    "type": "core.yesnoquestion"
+  },
+  "model": "core.question"
+}]
