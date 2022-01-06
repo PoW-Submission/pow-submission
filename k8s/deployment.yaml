@@ -27,7 +27,7 @@ spec:
       volumes:
         - name: nginx-conf
           configMap:
-            name: pow-submission-enabled-configmap
+            name: pow-submission-sites-enabled-configmap
         - name: staticfiles
           emptyDir: {}
       initContainers:
@@ -88,7 +88,7 @@ spec:
             mountPath: /etc/nginx/conf.d/
           - name: staticfiles
             mountPath: /var/www/html
-      - name: navigator
+      - name: pow-submission 
         image: jmwhorton/pow_submission:latest
         env:
         - name: POW_DATABASE_HOST

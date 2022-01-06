@@ -43,4 +43,4 @@ ENV POW_DATABASE_HOST=$POW_DATABASE_HOST
 
 ENV DJANGO_SETTINGS_MODULE=pow_submission.prod_settings
 ENTRYPOINT ["gunicorn"]
-CMD ["icf_navigator.wsgi", "--bind=127.0.0.1:3000", "--workers=2"]
+CMD ["pow_submission.wsgi", "--bind=127.0.0.1:3000", "--workers=2"]
