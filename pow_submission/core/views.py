@@ -1,7 +1,9 @@
-from django.shortcuts import render, redirect
+from django.views.generic import ListView, CreateView, UpdateView
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from core import models
 from users.models import PotentialUser, ADUser
 from django import forms
@@ -12,7 +14,9 @@ def home_view(request):
     consent_forms = []
     if request.user.is_authenticated:
         termPlans = models.TermPlan.objects.filter(student__email=request.user.email)
-    track = request.user.track
+        track = request.user.track
+        if track == None:
+            redirect('configure', request.user.pk) 
     categories = models.Category.objects.filter(track=track)
     terms = []
     terms = models.Term.objects.all()
@@ -22,6 +26,28 @@ def home_view(request):
                    'terms': terms,
                    'track': track,
                    'categories': categories})
+
+class configure(UpdateView): 
+    model = ADUser
+    fields = ('track', 'advisor',)
+    template_name = 'core/configure.html'
+
+    def get_object(self):
+        return get_object_or_404(ADUser, pk=self.request.user.pk)
+    
+    def get_success_url(self):
+        messages.success(self.request, 'Form submission successful')
+        return reverse('home',)
+    
+    def configure(request):
+        return render(requst,
+                'core/configure.html',
+                )
+
+#    student = ADUser.objects.get(email=request.user.email)
+#    return render(request,
+#                  'core/configure.html',
+#                  {'student': student})
 
 def faculty_home(request):
     consent_forms = []

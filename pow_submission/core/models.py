@@ -26,6 +26,14 @@ class Course(models.Model):
     def __str__(self):
         return self.label
 
+class Faculty(models.Model):
+    email = models.EmailField(max_length=255, unique=True)
+    name = models.TextField()
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
 class Term(models.Model):
     label = models.CharField(max_length=50, unique=True)
     courses = models.ManyToManyField(Course, through='Offering')

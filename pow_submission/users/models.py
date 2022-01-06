@@ -37,6 +37,7 @@ class ADUser(AbstractUser):
     username = None
     email = models.EmailField(max_length=255, unique=True)
     track = models.ForeignKey('core.Track', null=True, on_delete=models.SET_NULL)
+    advisor = models.ForeignKey('core.Faculty', null=True, on_delete=models.SET_NULL)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

@@ -1,3 +1,4 @@
+const webpack = require('webpack'); //to access built-in plugins
 const path = require("path");
 const exclusions = /node_modules/;
 
@@ -42,6 +43,6 @@ module.exports = [
           }]
         }
       ]
-    }
+    },
   },
 ];
