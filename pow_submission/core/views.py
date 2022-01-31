@@ -8,6 +8,11 @@ from core import models
 from users.models import PotentialUser, ADUser
 from django import forms
 from django.urls import reverse
+from django.template.defaulttags import register
+
+@register.filter
+def get_value(dictionary, key):
+    return dictionary.get(key)
 
 # Create your views here.
 def home_view(request):
@@ -17,15 +22,34 @@ def home_view(request):
         track = request.user.track
         if track == None:
             redirect('configure', request.user.pk) 
+    else:
+        return render(request,
+                  'core/home.html',)
     categories = models.Category.objects.filter(track=track)
+    categoryDicts = []
+    for category in categories:
+        approvedHours = 0
+        for termPlan in [x for x in termPlans if x.approval == 'Approved']:
+            for plannedWork in termPlan.plannedWorks.all():
+                if category in plannedWork.course.categories.all():
+                    approvedHours += plannedWork.course.units
+        categoryDicts.append({'category':category, 'hours':(int)(approvedHours)})
+    termPlanDicts = []
+    for termPlan in termPlans:
+        hours = 0
+        for plannedWork in termPlan.plannedWorks.all():
+            hours += plannedWork.course.units
+        termPlanDicts.append({'termPlan':termPlan, 'hours':(int)(hours)})
     terms = []
     terms = models.Term.objects.all()
     return render(request,
                   'core/home.html',
                   {'termPlans': termPlans,
+                   'termPlanDicts': termPlanDicts,
                    'terms': terms,
                    'track': track,
-                   'categories': categories})
+                   'categories': categories,
+                   'categoryDicts':categoryDicts})
 
 class configure(UpdateView): 
     model = ADUser
@@ -51,18 +75,23 @@ class configure(UpdateView):
 
 def faculty_home(request):
     consent_forms = []
-    if request.user.is_authenticated:
-        termPlans = models.TermPlan.objects.filter(approver=request.user.email)
-    students = set() 
-    for termPlan in termPlans:
-        students.add(termPlan.student)
+    students = ADUser.objects.filter(advisor__email=request.user.email)
+    for student in students:
+        approvedHours = 0
+        termPlans = student.termPlans.all()
+        for termPlan in termPlans:
+            if termPlan.approval == "Approved":
+                plannedWorks = termPlan.plannedWorks.all()
+                for plannedWork in plannedWorks:
+                    approvedHours += plannedWork.course.units
+        student.approvedHours = int(approvedHours)
     return render(request,
                   'core/faculty_home.html',
                   {'students': students})
 @login_required
 def student_overview(request, student_id):
     student = ADUser.objects.get(pk=student_id)
-    if not models.TermPlan.objects.filter(approver=request.user.email).filter(student=student).exists():
+    if not student.advisor.email == request.user.email:
       return redirect('home')
     termPlans = models.TermPlan.objects.filter(student=student)
     track = student.track
@@ -128,12 +157,17 @@ def faculty_term(request, termPlan_id):
     categories = models.Category.objects.filter(track=track)
     tp = models.TermPlan.objects.get(pk=termPlan_id)
     plannedWorks = models.PlannedWork.objects.filter(student=tp.student, termPlan=tp.pk)
+    usedCategories = set()
+    for category in categories:
+        for plannedWork in plannedWorks:
+            if category in plannedWork.course.categories.all():
+                usedCategories.add(category)
     return render(request, 
                   'core/faculty_term.html',
                   {'tp': tp,
                    'plannedWorks': plannedWorks,
                    'track': track,
-                   'categories': categories})
+                   'categories': usedCategories})
 
 @login_required
 def student_term(request, termPlan_id):
@@ -142,13 +176,11 @@ def student_term(request, termPlan_id):
     track = request.user.track
     categories = models.Category.objects.filter(track=track)
     if request.method == 'POST':
-        print('here post')
         if saveForm.is_valid():
-            print('before')
-            print('between')
             saveForm.save()
+            if 'SaveSubmit' in request.POST:
+                saveForm.save_submit()
         else:
-            print('invalid')
             print(saveForm.errors)
     tp = models.TermPlan.objects.get(pk=termPlan_id)
     form = models.TermPlanForm(instance=tp)
@@ -350,6 +382,13 @@ def approve_all(request, student_id):
             if termPlan.approval == 'Submitted':
                 termPlan.approval = 'Approved'
                 termPlan.save()
+                termPlan.currentPlans.all().delete()
+                for plannedWork in termPlan.plannedWorks.all():
+                    currentPlan = models.CurrentPlan(termPlan = termPlan,
+                                            course = plannedWork.course,
+                                            student=plannedWork.student,
+                                            offering=plannedWork.offering)
+                    currentPlan.save()
 
         return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
     else:
@@ -361,13 +400,23 @@ def faculty_approve(request, termPlan_id, approval_type):
     if request.method == 'POST':
         termPlan = models.TermPlan.objects.get(pk=termPlan_id)
         student = termPlan.student
-        print('approval type: ' + approval_type)
         if approval_type == 'A':
             termPlan.approval = 'Approved'
             termPlan.save()
         elif approval_type == 'TA':
             termPlan.approval = 'Temp Approved'
             termPlan.save()
+
+        if approval_type == 'A' or approval_type == 'TA':
+            termPlan.currentPlans.all().delete()
+            for plannedWork in termPlan.plannedWorks.all():
+                    currentPlan = models.CurrentPlan(termPlan = termPlan,
+                                            course = plannedWork.course,
+                                            student=plannedWork.student,
+                                            offering=plannedWork.offering)
+                    currentPlan.save()
+            
+
 
         return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
     else:

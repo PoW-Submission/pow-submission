@@ -82,6 +82,12 @@ class PlannedWork(models.Model):
     termPlan = models.ForeignKey(TermPlan, related_name='plannedWorks',  on_delete=models.CASCADE)
     grade = models.CharField(max_length=10)
 
+class CurrentPlan(models.Model):
+    offering = models.ForeignKey(Offering, null=True, on_delete=models.SET_NULL)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    student = models.ForeignKey(ADUser, on_delete=models.CASCADE)
+    termPlan = models.ForeignKey(TermPlan, related_name='currentPlans',  on_delete=models.CASCADE)
+
 class TermPlanForm(forms.ModelForm):
     class Meta:
         model = TermPlan
@@ -105,7 +111,7 @@ class TermPlanForm(forms.ModelForm):
                 criterion2 = Q(categories__in=[category])
                 self.fields[fieldName] = forms.ModelChoiceField(queryset=Course.objects.filter(criterion1 & criterion2),
                                                                                                  required=False,
-                                                                widget=forms.Select(attrs={'style':'width:450px'}))
+                                                                widget=forms.Select(attrs={'class':'w-100'}))
 
                 try:
                     self.initial[fieldName] = plannedWorksByCategory[i].course
@@ -113,18 +119,19 @@ class TermPlanForm(forms.ModelForm):
                     self.initial[fieldName] = ""
 
                 offerings = Offering.objects.filter(term=termPlan.term)
+                self.hasOfferings = False
                 if offerings:
                   self.hasOfferings = True
                   if i < (len(plannedWorksByCategory)) and plannedWorksByCategory[i].offering:
                       self.fields[offeringName] = forms.ModelChoiceField(queryset=offerings,
                              required=False,
-                             widget=forms.Select(attrs={'style':'width:450px'}))
+                             widget=forms.Select(attrs={'class':'w-100'}))
                       self.initial[offeringName] = plannedWorksByCategory[i].offering
                       self.fields[checkboxName] = forms.BooleanField(initial=True, required=False)
                   else:
                       self.fields[offeringName] = forms.ModelChoiceField(queryset=offerings,
                              required=False,
-                             widget=forms.Select(attrs={'style':'width:450px'}))
+                             widget=forms.Select(attrs={'class':'w-100'}))
                       self.initial[offeringName] = ""
                       self.fields[checkboxName] = forms.BooleanField(initial=False, required=False)
 
@@ -138,7 +145,6 @@ class TermPlanForm(forms.ModelForm):
           #                                              required=False)
 
     def clean(self):
-        print('here clean')
         termPlan = self.instance
         track = termPlan.student.track
         courses = set()
@@ -152,20 +158,14 @@ class TermPlanForm(forms.ModelForm):
               offeringName = 'offering_%s_%s' % (category.label, i,)
               
               if self.cleaned_data.get(fieldName):
-                  print('cleaning data')
                   course = self.cleaned_data[fieldName]
                   if course in courses:
                        self.add_error(fieldName, 'Duplicate')	
                   else:
-                       print('adding course')
                        courses.add(course)
                        if self.cleaned_data.get(checkboxName):
-                         print('checkbox good!!!')
                          self.cleaned_data.get(offeringName)
                          offering = self.cleaned_data[offeringName]
-                         print(self.cleaned_data)
-                         print(offeringName)
-                         print(offering)
                        else:
                          offering = None
                        plannedWorks.append(PlannedWork(
@@ -180,16 +180,21 @@ class TermPlanForm(forms.ModelForm):
         self.cleaned_data["courses"] = courses
         self.cleaned_data["plannedWorks"] = plannedWorks
         self.cleaned_data["student"] = termPlan.student
+        self.cleaned_data["term"] = termPlan.term
 
     def save(self):
-        print('here save')
-        print(self.instance)
-        print(self.cleaned_data["courses"])
         termPlan = self.instance
-        print('tp student ' + str(termPlan.student.email))
         termPlan.plannedWorks.all().delete()
         for plannedWork in self.cleaned_data["plannedWorks"]:
           plannedWork.save()
+
+    def save_submit(self):
+        termPlan = self.instance 
+        termPlan.approval = "Submitted"
+        termPlan.save()
+
+    def hasOfferings(self):
+        return self.hasOfferings
 
     def get_course_fields(self):
         for fieldName in self.fields:

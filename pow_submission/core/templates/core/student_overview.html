@@ -2,10 +2,11 @@
 {% load static %}
 {% block content %}
 <link rel="stylesheet" href="{% static 'core/table.css' %}">
+<script src="{% static 'core/tooltip.js' %}" ></script>
 
 {% if user.is_authenticated %}
 <div class="container">
-  <div class="row">
+  <div class="row mb-4">
     <div class="col-6">
       <h4>Term Plans</h4>
       <table>
@@ -33,18 +34,30 @@
       </form>
     </div>
   </div>
-  <table class="col-12">
+  <table class="table table-sm table-bordered col-12">
+    <thead> <tr>
+        <th >Course
+          <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This is the course listed in the student's track plan.">help</i></th>
+        <th>Replacement Offering
+          <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This course replaces the course in the student's track plan if the original course is not offered.">help</i></th>
+    </tr></thead>
     {% for category in categories %}
       <tr><td><h5>{{category.label}}</h5></td></tr>
       {% for termPlan in termPlans %}
         {% for plannedWork in termPlan.plannedWorks.all %}
           {% if category in plannedWork.course.categories.all %}
             <tr class =
-              {% if termPlan.approval == "Approved"  %}"alert-success{% endif %}
-              {% if termPlan.approval == "Submitted" %}"alert-warning{% endif %}
+              {% if termPlan.approval == "Approved"  %}"table-success{% endif %}
+              {% if termPlan.approval == "Submitted" %}"table-warning{% endif %}
+              {% if termPlan.approval == "Temp Approved" %}"table-primary{% endif %}
               {% if termPlan.approval == "" %}"{% endif %}">
               <td>{{plannedWork.course.label}}</td>
-            <tr>
+              {% if plannedWork.offering != None %}
+                <td>{{plannedWork.offering}}</td>
+              {% else %}
+                <td/>
+            {% endif %}
+						</tr>
           {% endif %}
         {% endfor %}
       {% endfor %}

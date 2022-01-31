@@ -2,10 +2,13 @@
 {% load static %}
 {% block content %}
 <link rel="stylesheet" href="{% static 'core/table.css' %}">
+<script src="{% static 'core/tooltip.js' %}" ></script>
+
+
 
 {% if user.is_authenticated %}
 <div class="container">
-  <div class="row">
+  <div class="row mb-4 ">
     <div class="col-6">
       <h4>Your Term Plans</h4>
       <table>
@@ -21,6 +24,13 @@
             {% if tp.approval == "Temp Approved" %}alert-primary{% endif %}
             {% if tp.approval == "" %}{% endif %}"
             >{{tp.approval}}
+          </td>
+          <td>
+            {% for termPlanDict in termPlanDicts %}
+              {% if termPlanDict|get_value:'termPlan' == tp %}
+                Hours: {{termPlanDict|get_value:'hours'}}
+              {% endif %}
+            {% endfor %}
           </td>
         </tr>
       {% endfor %}
@@ -43,29 +53,42 @@
       </form>
     </div>
   </div>
-  <table class="col-12">
-    {% for category in categories %}
-      <tr><td><h5>{{category.label}}</h5></td></tr>
+  {% if termPlans %}
+  <table class=" table table-sm table-bordered col-12">
+    <thead> <tr>
+        <th >Course
+          <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This is the course listed in your track plan.">help</i></th>
+        <th>Replacement Offering
+          <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This course replaces the course in your track plan if the original course is not offered.">help</i></th>
+    </tr></thead>
+    {% for categoryDict in categoryDicts%}
+    <tr><td><h5>{{categoryDict|get_value:'category'}} ({{categoryDict|get_value:'hours'}} hr approved)</h5></td></tr>
       {% for termPlan in termPlans %}
         {% for plannedWork in termPlan.plannedWorks.all %}
-          {% if category in plannedWork.course.categories.all %}
+          {% if categoryDict|get_value:'category' in plannedWork.course.categories.all %}
             <tr class =
-              {% if termPlan.approval == "Approved"  %}"alert-success{% endif %}
-              {% if termPlan.approval == "Submitted" %}"alert-warning{% endif %}
+              {% if termPlan.approval == "Approved"  %}"table-success{% endif %}
+              {% if termPlan.approval == "Submitted" %}"table-warning{% endif %}
+              {% if termPlan.approval == "Temp Approved" %}"table-primary{% endif %}
               {% if termPlan.approval == "" %}"{% endif %}">
-              <td>{{plannedWork.course.label}}</td>
+              <td scope="row">{{plannedWork.course.label}}</td>
               {% if plannedWork.offering != None %}
                 <td>{{plannedWork.offering}}</td>
               {% else %}
                 <td/>
               {% endif %}
-            <tr>
+            </tr>
           {% endif %}
         {% endfor %}
       {% endfor %}
     {% endfor %}
+
   
   </table>
+  {% endif %}
+  <div class='col-12'>
+    <p>Thank you for your help testing this site.  If you have any questions, comments, or problems, please email them to <a href='mailto:jmwhorton@uams.edu'>jmwhorton@uams.edu</a>.</p>
+  </div>
 </div>
 {% else %}
 <div class="container">
