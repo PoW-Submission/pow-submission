@@ -18,10 +18,14 @@ def get_value(dictionary, key):
 def home_view(request):
     consent_forms = []
     if request.user.is_authenticated:
-        termPlans = models.TermPlan.objects.filter(student__email=request.user.email)
+    #commented for debugging
+    #if request.user.is_authenticated and request.user.is_staff == False:
+        termPlans = models.TermPlan.objects.filter(student__email=request.user.email).exclude(plannedWorks=None)
         track = request.user.track
         if track == None:
-            redirect('configure', request.user.pk) 
+            return redirect('configure', request.user.pk) 
+    elif request.user.is_authenticated and request.user.is_staff:
+        return redirect('faculty_home')
     else:
         return render(request,
                   'core/home.html',)
@@ -31,7 +35,7 @@ def home_view(request):
         approvedHours = 0
         for termPlan in [x for x in termPlans if x.approval == 'Approved']:
             for plannedWork in termPlan.plannedWorks.all():
-                if category in plannedWork.course.categories.all():
+                if category == plannedWork.category:
                     approvedHours += plannedWork.course.units
         categoryDicts.append({'category':category, 'hours':(int)(approvedHours)})
     termPlanDicts = []
@@ -63,17 +67,25 @@ class configure(UpdateView):
         messages.success(self.request, 'Form submission successful')
         return reverse('home',)
     
+    @login_required
     def configure(request):
-        return render(requst,
-                'core/configure.html',
-                )
+        if request.user.is_authenticated and request.user.is_staff == False:
+            return render(requst,
+                    'core/configure.html',
+                    )
+        else:
+            return redirect('home')
+
 
 #    student = ADUser.objects.get(email=request.user.email)
 #    return render(request,
 #                  'core/configure.html',
 #                  {'student': student})
 
+@login_required
 def faculty_home(request):
+    if not (request.user.is_authenticated and request.user.is_staff):
+        return redirect('home')
     consent_forms = []
     students = ADUser.objects.filter(advisor__email=request.user.email)
     for student in students:
@@ -90,17 +102,41 @@ def faculty_home(request):
                   {'students': students})
 @login_required
 def student_overview(request, student_id):
+    if not (request.user.is_authenticated and request.user.is_staff):
+        return redirect('home')
     student = ADUser.objects.get(pk=student_id)
     if not student.advisor.email == request.user.email:
+    #add - and request.user.email not in (3 admin faculty)
       return redirect('home')
-    termPlans = models.TermPlan.objects.filter(student=student)
+    termPlans = models.TermPlan.objects.filter(student=student).exclude(plannedWorks=None)
     track = student.track
     categories = models.Category.objects.filter(track=track)
+
+    categoryDicts = []
+    for category in categories:
+        approvedHours = 0
+        for termPlan in [x for x in termPlans if x.approval == 'Approved']:
+            for plannedWork in termPlan.plannedWorks.all():
+                if category == plannedWork.category:
+                    approvedHours += plannedWork.course.units
+        categoryDicts.append({'category':category, 'hours':(int)(approvedHours)})
+    termPlanDicts = []
+    for termPlan in termPlans:
+        hours = 0
+        for plannedWork in termPlan.plannedWorks.all():
+            hours += plannedWork.course.units
+        termPlanDicts.append({'termPlan':termPlan, 'hours':(int)(hours)})
+    terms = []
+    terms = models.Term.objects.all()
     return render(request,
                   'core/student_overview.html',
-                  {'student': student,
+                  {'termPlans': termPlans,
+                   'student': student,
+                   'termPlanDicts': termPlanDicts,
+                   'terms': terms,
+                   'track': track,
                    'categories': categories,
-                   'termPlans': termPlans}) 
+                   'categoryDicts':categoryDicts})
 
 class NewEmailForm(forms.Form):
     email = forms.EmailField()
@@ -150,28 +186,46 @@ class NewTerm(forms.Form):
     term_id = forms.CharField()
 
 @login_required
-##add security
 def faculty_term(request, termPlan_id):
-    tp = models.TermPlan.objects.get(pk=termPlan_id)
-    track = request.user.track
+    if not (request.user.is_authenticated and request.user.is_staff):
+        return redirect('home')
+    termPlan = models.TermPlan.objects.get(pk=termPlan_id)
+    student = termPlan.student
+    if not student.advisor.email == request.user.email:
+    #add - and request.user.email not in (3 admin faculty)
+      return redirect('home')
+    saveForm = models.TermPlanForm(request.POST, instance=termPlan)
+    track = student.track
     categories = models.Category.objects.filter(track=track)
-    tp = models.TermPlan.objects.get(pk=termPlan_id)
-    plannedWorks = models.PlannedWork.objects.filter(student=tp.student, termPlan=tp.pk)
-    usedCategories = set()
-    for category in categories:
-        for plannedWork in plannedWorks:
-            if category in plannedWork.course.categories.all():
-                usedCategories.add(category)
+    if request.method == 'POST':
+        if saveForm.is_valid():
+            saveForm.save()
+            if 'ApproveButton' in request.POST:
+                termPlan.approval = 'Approved'
+                termPlan.save()
+                termPlan.currentPlans.all().delete()
+                for plannedWork in termPlan.plannedWorks.all():
+                    currentPlan = models.CurrentPlan(termPlan = termPlan,
+                                            course = plannedWork.course,
+                                            student=plannedWork.student,
+                                            offering=plannedWork.offering)
+                    currentPlan.save()
+
+    form = models.TermPlanForm(instance=termPlan)
+    plannedWorks = models.PlannedWork.objects.filter(student=student, termPlan=termPlan.pk)
     return render(request, 
                   'core/faculty_term.html',
-                  {'tp': tp,
+                  {'tp': termPlan,
                    'plannedWorks': plannedWorks,
                    'track': track,
-                   'categories': usedCategories})
+                   'categories': categories,
+                   'form':form})
 
 @login_required
 def student_term(request, termPlan_id):
     tp = models.TermPlan.objects.get(pk=termPlan_id)
+    if not (request.user.is_authenticated and request.user.is_staff == False and tp.student == request.user):
+        return redirect('home')
     saveForm = models.TermPlanForm(request.POST, instance=tp)
     track = request.user.track
     categories = models.Category.objects.filter(track=track)
@@ -373,10 +427,14 @@ def new_form(request):
         return HttpResponse("require POST", status=405)
 
 @login_required
-##need to add security
 def approve_all(request, student_id):
     if request.method == 'POST':
         student = models.ADUser.objects.get(pk=student_id)
+        if not (request.user.is_authenticated and request.user.is_staff):
+            return redirect('home')
+        if not student.advisor.email == request.user.email:
+        #add - and request.user.email not in (3 admin faculty)
+            return redirect('home')
         termPlans = student.termPlans.all()
         for termPlan in termPlans:
             if termPlan.approval == 'Submitted':
@@ -395,11 +453,15 @@ def approve_all(request, student_id):
         return HttpResponse("require POST", status=405)
 
 @login_required
-##need to add security
 def faculty_approve(request, termPlan_id, approval_type):
     if request.method == 'POST':
         termPlan = models.TermPlan.objects.get(pk=termPlan_id)
         student = termPlan.student
+        if not (request.user.is_authenticated and request.user.is_staff):
+            return redirect('home')
+        if not student.advisor.email == request.user.email:
+        #add - and request.user.email not in (3 admin faculty)
+            return redirect('home')
         if approval_type == 'A':
             termPlan.approval = 'Approved'
             termPlan.save()
@@ -424,6 +486,10 @@ def faculty_approve(request, termPlan_id, approval_type):
 
 @login_required
 def new_term(request):
+    if not request.user.is_authenticated:
+    #commented for debugging
+    #if request.user.is_authenticated and request.user.is_staff == False:
+        return redirect('home')
     if request.method == 'POST':
         form = NewTerm(request.POST)
         if form.is_valid():

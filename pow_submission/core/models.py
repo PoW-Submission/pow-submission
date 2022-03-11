@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Q
 from django import forms
+from django.db.models.fields import BLANK_CHOICE_DASH
 from users.models import ADUser, PotentialUser
 from typedmodels.models import TypedModel
 
@@ -41,6 +42,13 @@ class Term(models.Model):
     def __str__(self):
         return self.label
 
+class Category(models.Model):
+    label = models.CharField(max_length=100)
+    courses = models.ManyToManyField(Course, related_name='categories', blank=True)
+
+    def __str__(self):
+        return self.label
+
 class Offering(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     term = models.ForeignKey(Term, related_name= 'offerings', on_delete=models.CASCADE)
@@ -50,21 +58,19 @@ class Offering(models.Model):
     def __str__(self):
         return self.course.label
 
-class Category(models.Model):
-    label = models.CharField(max_length=100)
-    courses = models.ManyToManyField(Course, related_name='categories', blank=True)
-
-    def __str__(self):
-        return self.label
-
 class Track(models.Model):
     label = models.CharField(max_length=100, unique=True)
     startTerm = models.ForeignKey(Term, on_delete=models.CASCADE)
-    categories = models.ManyToManyField(Category, blank=True)
+    categories = models.ManyToManyField(Category, through='TrackRequirement', blank=True)
     courses = models.ManyToManyField(Course,related_name='tracks',  blank=True)
 
     def __str__(self):
          return self.label
+
+class TrackRequirement(models.Model):
+    track = models.ForeignKey(Track, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    requiredHours = models.FloatField()
 
 class TermPlan(models.Model):
     student = models.ForeignKey(ADUser, related_name = 'termPlans', on_delete=models.CASCADE, blank=True)
@@ -81,6 +87,8 @@ class PlannedWork(models.Model):
     student = models.ForeignKey(ADUser, on_delete=models.CASCADE)
     termPlan = models.ForeignKey(TermPlan, related_name='plannedWorks',  on_delete=models.CASCADE)
     grade = models.CharField(max_length=10)
+    completionStatus = models.CharField(max_length=20, null=True)
+    category = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)
 
 class CurrentPlan(models.Model):
     offering = models.ForeignKey(Offering, null=True, on_delete=models.SET_NULL)
@@ -96,88 +104,91 @@ class TermPlanForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         termPlan = self.instance
+        term = termPlan.term
         track = termPlan.student.track
         categories = Category.objects.filter(track=track)
         plannedWorks = PlannedWork.objects.filter(termPlan=termPlan)
-        for category in categories:
-            i = -1
-            plannedWorksByCategory = [x for x in plannedWorks if category in x.course.categories.all()] 
-            offerings = Offering.objects.filter(term=termPlan.term)
-            for i in range(max(len(plannedWorksByCategory), 4) ):
-                fieldName = 'plannedWork_%s_%s' % (category.label, i,)
-                checkboxName = 'replaceWith_%s_%s' % (category.label, i,)
-                offeringName = 'offering_%s_%s' % (category.label, i,)
-                criterion1 = Q(tracks__in=[track])
-                criterion2 = Q(categories__in=[category])
-                self.fields[fieldName] = forms.ModelChoiceField(queryset=Course.objects.filter(criterion1 & criterion2),
-                                                                                                 required=False,
-                                                                widget=forms.Select(attrs={'class':'w-100'}))
+        i = -1
+        offerings = Offering.objects.filter(term=termPlan.term)
+        for i in range( 4):
+            fieldName = 'plannedWork_%s' % ( i,)
+            categoryName = 'category_%s' % (i,)
+            statusName = 'status_%s' % (i,)
+            self.fields[fieldName] = forms.ModelChoiceField(queryset=Offering.objects.filter(term=term),
+                                                                                             required=False,
+                                                            widget=forms.Select(attrs={'class':'w-100'}))
 
-                try:
-                    self.initial[fieldName] = plannedWorksByCategory[i].course
-                except IndexError:
-                    self.initial[fieldName] = ""
+            try:
+                self.initial[fieldName] = plannedWorks[i].offering
+            except IndexError:
+                self.initial[fieldName] = ""
 
-                offerings = Offering.objects.filter(term=termPlan.term)
-                self.hasOfferings = False
-                if offerings:
-                  self.hasOfferings = True
-                  if i < (len(plannedWorksByCategory)) and plannedWorksByCategory[i].offering:
-                      self.fields[offeringName] = forms.ModelChoiceField(queryset=offerings,
-                             required=False,
-                             widget=forms.Select(attrs={'class':'w-100'}))
-                      self.initial[offeringName] = plannedWorksByCategory[i].offering
-                      self.fields[checkboxName] = forms.BooleanField(initial=True, required=False)
-                  else:
-                      self.fields[offeringName] = forms.ModelChoiceField(queryset=offerings,
-                             required=False,
-                             widget=forms.Select(attrs={'class':'w-100'}))
-                      self.initial[offeringName] = ""
-                      self.fields[checkboxName] = forms.BooleanField(initial=False, required=False)
+            if i < (len(plannedWorks)) and plannedWorks[i].category:
+                self.fields[categoryName] = forms.ModelChoiceField(queryset=categories, required=False,
+                                                                    widget=forms.Select(attrs={'class':'w-100'}))
+                self.initial[categoryName] = plannedWorks[i].category
+            else:
+                self.fields[categoryName] = forms.ModelChoiceField(queryset=categories, required=False,
+                                                                    widget=forms.Select(attrs={'class':'w-100'}))
+                self.initial[categoryName] = ""
+
+            choices=  [('','-------'), ('Passed', 'Passed'), ('Failed', 'Failed')] 
+            if i < (len(plannedWorks)) and plannedWorks[i].completionStatus:
+                self.fields[statusName] = forms.ChoiceField(required=False, choices= choices)
+                self.initial[statusName] = plannedWorks[i].completionStatus
+            else:
+                self.fields[statusName] = forms.ChoiceField(required=False, choices= choices)
+                self.initial[statusName] = ""
 
 
 
-
-        #create an extra blank field
-        #fieldName = 'plannedWork_offering_%s' % (i + 1,)
-        #self.fields[fieldName] = forms.ModelChoiceField(queryset=Offering.objects.filter(term=termPlan.term), 
-         #                                               widget=forms.Select(attrs={'class':'blankOffering'}),
-          #                                              required=False)
 
     def clean(self):
         termPlan = self.instance
         track = termPlan.student.track
         courses = set()
+        offerings = set()
         plannedWorks = []
         categories = Category.objects.filter(track=track)
-        for category in categories:
-            i = 0
-            while i < 4:
-              fieldName = 'plannedWork_%s_%s' % (category.label, i,)
-              checkboxName = 'replaceWith_%s_%s' % (category.label, i,)
-              offeringName = 'offering_%s_%s' % (category.label, i,)
-              
-              if self.cleaned_data.get(fieldName):
-                  course = self.cleaned_data[fieldName]
-                  if course in courses:
-                       self.add_error(fieldName, 'Duplicate')	
+        i = 0
+        while i < 4:
+          fieldName = 'plannedWork_%s' % (i,)
+          categoryName = 'category_%s' % (i,)
+          statusName = 'status_%s' % (i,)
+          if self.cleaned_data.get(fieldName):
+              offering = self.cleaned_data[fieldName]
+              if offering in offerings:
+                self.add_error(fieldName, 'Duplicate')
+              else:
+                  offerings.add(offering)
+                  if self.cleaned_data.get(statusName):
+                      completionStatus = self.cleaned_data[statusName]
                   else:
-                       courses.add(course)
-                       if self.cleaned_data.get(checkboxName):
-                         self.cleaned_data.get(offeringName)
-                         offering = self.cleaned_data[offeringName]
-                       else:
-                         offering = None
-                       plannedWorks.append(PlannedWork(
-                         termPlan=termPlan,
-                         course=course,
-                         student=termPlan.student,
-                         offering=offering,
-                       ))
-                      
-                       
-              i += 1
-        self.cleaned_data["courses"] = courses
+                      completionStatus = None
+                  if self.cleaned_data.get(categoryName):
+                      category = self.cleaned_data[categoryName]
+                  else:
+                      category = None
+                      print('category none')
+                      for categoryChoice in categories:
+                          print('category choice ' + categoryChoice.label)
+                          if (categoryChoice in offering.course.categories.all()):
+                              print('got it ' + categoryChoice.label)
+                              category = categoryChoice
+                  plannedWorks.append(PlannedWork(
+                      termPlan=termPlan,
+                      course=offering.course,
+                      student=termPlan.student,
+                      offering=offering,
+                      category=category,
+                      completionStatus=completionStatus
+                    ))
+
+
+          i += 1
+
+        self.cleaned_data["categories"] = categories
+        self.cleaned_data["offerings"] = offerings
         self.cleaned_data["plannedWorks"] = plannedWorks
         self.cleaned_data["student"] = termPlan.student
         self.cleaned_data["term"] = termPlan.term
@@ -200,12 +211,9 @@ class TermPlanForm(forms.ModelForm):
         for fieldName in self.fields:
             if fieldName.startswith('plannedWork_'):
                 count = fieldName.split("_",1)[1]
-                if self.hasOfferings:
-                  checkboxName = 'replaceWith_' + count
-                  offeringName = 'offering_' + count
-                  yield [self[fieldName], self[checkboxName], self[offeringName]]
-                else: 
-                  yield [self[fieldName], None, None]
+                categoryName = 'category_' + count
+                statusName = 'status_' + count
+                yield [self[fieldName], self[categoryName], self[statusName]]
 
 
 class CannedText(models.Model):

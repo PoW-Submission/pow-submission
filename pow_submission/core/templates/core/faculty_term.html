@@ -4,75 +4,40 @@
 <link rel="stylesheet" href="{% static 'core/table.css' %}">
 <script src="{% static 'core/tooltip.js' %}" ></script>
 
-<div class="container">
-  <div class="container, form-group">
+<form action="/faculty/student_term/{{tp.pk}}/" method="post">
+  <div class="container">
+    <div class="container, form-group">
       {% csrf_token %}
-    <div class="row">
-      <div class="col-6">
-        <h4>Track: {{track.label}} starting {{track.startTerm.label}}</h4>
-        <h4>Term: {{tp.term.label}}</h4>
-        <h5>Student: {{tp.student.email}}</h5>
+      <div class="row">
+        <h4 class="col-12">Track: {{track.label}} starting {{track.startTerm.label}}</h4>
+        <div class="col-12">
+          <h4>Term: {{tp.term.label}}</h4>
+          <h5>Student: {{tp.student.email}}</h5>
+          <h5>Advisor: {{tp.student.advisor.name}}
+            <a class="small" href="/configure">[Change]</a>
+          </h5>
+        </div>
       </div>
     </div>
-    <table class=" table-sm table table-bordered col-12">
-      <thead> <tr>
-          <th >Course
-            <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This is the course listed in the student's track plan.">help</i></th>
-          <th>Replacement Offering
-            <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This course replaces the course in the student's track plan if the original course is not offered.">help</i></th>
+    <table class=" table-sm ">
+      <thead class="border-bottom"> <tr>
+        <th>Course</th>
+        <th>Category
+          <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="The category the course counts towards in the student's track plan.">help</i></th>
+        <th>Completion Status</th>
       </tr></thead>
-      {% for category in categories %}
-      <tr><td><h5> {{category.label}} </h5></td></tr>
-        {% for plannedWork in tp.plannedWorks.all %}
-          {% if category in plannedWork.course.categories.all %}
-            <tr>
-              <td> {{ plannedWork.course}}</td>
-              {% if plannedWork.offering != None %}
-                <td> {{ plannedWork.offering }} </td>
-              {% endif %}
-            </tr>
-          {% endif %}
-        {% endfor %}
+      {% for course_field, category_field, status_field in form.get_course_fields %}
+        <tr>
+          <td> {{ course_field }} </td>
+          {% if category_field != None %} <td> {{ category_field }} </td> {% endif %}
+          <td> {{ status_field }} </td>
+        </tr>
       {% endfor %}
     </table>
+    <button class="btn btn-primary mt-3" type="submit" name="Save">Save</button>
+    <button class="btn btn-primary mt-3" type="submit" name="ApproveButton">Approve</button>
+    <a class="btn btn-secondary mt-3" href="/" role="button">Back</a>
   </div>
-  <div class='btn-group'>
-    <form action="/faculty/approve/{{ tp.pk }}/A/" method="post">
-      {% csrf_token %}
-      <button class="btn btn-primary mr-1" type="submit" name="Approve">Approve</button>
-    </form>
-    </div>
-    <div class='btn-group '>
-    <form action="/faculty/approve/{{ tp.pk }}/TA/" method="post">
-      {% csrf_token %}
-      <button class=" btn btn-primary" type="submit" name="TempApprove">Temp Approve</button>
-    </form>
-  </div>
-	{% if tp.approval == "Submitted" and tp.currentPlans.exists %}
-    <hr/>
-    <h5 class="mt-4">Previous approval</h5>
-    <table class="mt-4 table-sm table table-bordered col-12">
-      <thead> <tr>
-          <th >Course
-            <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This is the course listed in the student's track plan.">help</i></th>
-          <th>Replacement Offering
-            <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This course replaces the course in the student's track plan if the original course is not offered.">help</i></th>
-      </tr></thead>
-      {% for category in categories %}
-      <tr><td><h5> {{category.label}} </h5></td></tr>
-        {% for currentPlan in tp.currentPlans.all %}
-          {% if category in currentPlan.course.categories.all %}
-            <tr>
-              <td> {{ currentPlan.course}}</td>
-              {% if currentPlan.offering != None %}
-                <td> {{ currentPlan.offering }} </td>
-              {% endif %}
-            </tr>
-          {% endif %}
-        {% endfor %}
-      {% endfor %}
-    </table>
-  {% endif %}
-</div>
+</form>
 <script type="text/javascript" src = "{% static 'core/dynamic_list.js' %}"></script>
 {% endblock %}

@@ -34,34 +34,35 @@
       </form>
     </div>
   </div>
-  <table class="table table-sm table-bordered col-12">
-    <thead> <tr>
-        <th >Course
-          <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This is the course listed in the student's track plan.">help</i></th>
-        <th>Replacement Offering
-          <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="This course replaces the course in the student's track plan if the original course is not offered.">help</i></th>
+  <table class=" table table-sm table-bordered col-12">
+    <thead><tr>
+      <th>Course</th>
+      <th>Term</th>
+      <th>Completion Status</th>
     </tr></thead>
-    {% for category in categories %}
-      <tr><td><h5>{{category.label}}</h5></td></tr>
+    {% for categoryDict in categoryDicts%}
+    <tr><td class="border-0"><h5>{{categoryDict|get_value:'category'}} ({{categoryDict|get_value:'hours'}} hr approved)</h5></td></tr>
       {% for termPlan in termPlans %}
         {% for plannedWork in termPlan.plannedWorks.all %}
-          {% if category in plannedWork.course.categories.all %}
+          {% if categoryDict|get_value:'category' == plannedWork.category %}
             <tr class =
               {% if termPlan.approval == "Approved"  %}"table-success{% endif %}
               {% if termPlan.approval == "Submitted" %}"table-warning{% endif %}
               {% if termPlan.approval == "Temp Approved" %}"table-primary{% endif %}
               {% if termPlan.approval == "" %}"{% endif %}">
-              <td>{{plannedWork.course.label}}</td>
-              {% if plannedWork.offering != None %}
-                <td>{{plannedWork.offering}}</td>
+              <td scope="row">{{plannedWork.course.label}}</td>
+              <td scope="row">{{plannedWork.termPlan.term.label}}</td>
+              {% if plannedWork.completionStatus != None %}
+                <td scope="row">{{plannedWork.completionStatus}}</td>
               {% else %}
                 <td/>
-            {% endif %}
-						</tr>
+              {% endif %}
+            </tr>
           {% endif %}
         {% endfor %}
       {% endfor %}
     {% endfor %}
+
   
   </table>
 </div>
