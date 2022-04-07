@@ -4,10 +4,10 @@
 <link rel="stylesheet" href="{% static 'core/table.css' %}">
 <script src="{% static 'core/tooltip.js' %}" ></script>
 
-{% if user.is_authenticated %}
 <div class="container">
   <div class="row mb-4">
     <div class="col-6">
+      <h4>Student: {{student.email}}</h4>
       <h4>Term Plans</h4>
       <table>
       {% for tp in termPlans%}
@@ -17,11 +17,12 @@
             <a href="{% url 'faculty_term' termPlan_id=tp.pk %}">{{tp.term.label}}</a> 
           </td>
           <td class=
-            {% if tp.approval == "Approved"  %}"alert-success{% endif %}
-            {% if tp.approval == "Submitted" %}"alert-warning{% endif %}
-            {% if tp.approval == "Temp Approved" %}"alert-primary{% endif %}
-            {% if tp.approval == "" %}"{% endif %}"
-            >{{tp.approval}}
+            {% if tp.approval == "Approved"  %}"alert-success"{% endif %}
+            {% if tp.approval == "Submitted" %}"alert-warning"{% endif %}
+            {% if tp.approval == "Temp Approved" %}"alert-primary"{% endif %}
+            {% if tp.approval == "Denied" %}"alert-danger"{% endif %}
+            {% if tp.approval == "" %}""{% endif %}
+          >{{tp.approval}}
           </td>
         </tr>
       {% endfor %}
@@ -30,7 +31,7 @@
     <div class="col-6">
       <form action="/faculty/approve_all/{{ student.pk }}/" method="post">
         {% csrf_token %}
-        <button class="btn btn-primary" type="submit" name="ApproveAll">Approve All</button>
+        <button class="btn btn-primary" type="submit" name="ApproveAll">Approve All Submissions</button>
       </form>
     </div>
   </div>
@@ -49,6 +50,7 @@
               {% if termPlan.approval == "Approved"  %}"table-success{% endif %}
               {% if termPlan.approval == "Submitted" %}"table-warning{% endif %}
               {% if termPlan.approval == "Temp Approved" %}"table-primary{% endif %}
+              {% if termPlan.approval == "Denied" %}"table-danger{% endif %}
               {% if termPlan.approval == "" %}"{% endif %}">
               <td scope="row">{{plannedWork.course.label}}</td>
               <td scope="row">{{plannedWork.termPlan.term.label}}</td>
@@ -66,16 +68,4 @@
   
   </table>
 </div>
-{% else %}
-<div class="container">
-  <div class="jumbotron text-center">
-    <h1 class="display-4">Plan of Work Submission</h1>
-    <p class="lead">A form for submitting student plan of work documents.</p>
-    <hr class="my-4">
-    <p>Please log in with your UAMS credentials.</p>
-    <a class="btn btn-primary btn-lg" href="/accounts/login/">Login</a>
-    <a class="btn btn-secondary btn-lg" href="/accounts/register/">Register</a>
-  </div>
-</div>
-{% endif %}
 {% endblock %}

@@ -9,9 +9,12 @@
     <div class="container, form-group">
       {% csrf_token %}
       <div class="row">
-        <h4 class="col-12">Track: {{track.label}} starting {{track.startTerm.label}}</h4>
+        <h4 class="col-12">Track: {{track.label}} starting {{track.term.label}}</h4>
         <div class="col-12">
           <h4>Term: {{tp.term.label}}</h4>
+          {% if tp.approval != "" and tp.approval != None %}
+            <h5>Term Plan Status: {{tp.approval}}</h5>
+          {% endif %}
           <h5>Student: {{tp.student.email}}</h5>
           <h5>Advisor: {{tp.student.advisor.name}}
             <a class="small" href="/configure">[Change]</a>
@@ -36,7 +39,8 @@
     </table>
     <button class="btn btn-primary mt-3" type="submit" name="Save">Save</button>
     <button class="btn btn-primary mt-3" type="submit" name="ApproveButton">Approve</button>
-    <a class="btn btn-secondary mt-3" href="/" role="button">Back</a>
+    <button class="btn btn-danger mt-3" type="submit" name="DenyButton">Deny</button>
+    <a class="btn btn-secondary mt-3" href="/faculty/student_overview/{{tp.student.pk}}" role="button">Back</a>
   </div>
 </form>
 <script type="text/javascript" src = "{% static 'core/dynamic_list.js' %}"></script>

@@ -24,10 +24,8 @@ from users import views as user_views
 urlpatterns = [
     url(r'^$', views.home_view, name='home'),
     path('configure/', views.configure.as_view(), name='configure'),
+    path('accounts/login/', views.login_view, name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/login/',
-        auth_views.LoginView.as_view(template_name='registration/login.html'),
-        name='login'),
     path('student/term/<int:termPlan_id>/', views.student_term, name='student_term'),
     path('faculty/student_term/<int:termPlan_id>/', views.faculty_term, name='faculty_term'),
     path('faculty/approve/<int:termPlan_id>/<slug:approval_type>/', views.faculty_approve, name='faculty_approve'),

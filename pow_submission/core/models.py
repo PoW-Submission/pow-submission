@@ -60,7 +60,7 @@ class Offering(models.Model):
 
 class Track(models.Model):
     label = models.CharField(max_length=100, unique=True)
-    startTerm = models.ForeignKey(Term, on_delete=models.CASCADE)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE)
     categories = models.ManyToManyField(Category, through='TrackRequirement', blank=True)
     courses = models.ManyToManyField(Course,related_name='tracks',  blank=True)
 
@@ -193,9 +193,12 @@ class TermPlanForm(forms.ModelForm):
         self.cleaned_data["student"] = termPlan.student
         self.cleaned_data["term"] = termPlan.term
 
-    def save(self):
+    def save(self, deleteApproval):
         termPlan = self.instance
         termPlan.plannedWorks.all().delete()
+        if deleteApproval:
+            termPlan.approval = ''
+            termPlan.save()
         for plannedWork in self.cleaned_data["plannedWorks"]:
           plannedWork.save()
 

@@ -20,15 +20,52 @@
         <div class="nav">
           {% if user.is_authenticated %}
             {% block nav_link %}{% endblock %}
-            <a class="nav-link text-light" href="/configure/">Configure</a>
+            {% if not user.is_staff %}
+              <a class="nav-link text-light" href="/configure/">Configure</a>
+            {% else %}
+              <a class="nav-link text-light" href="/faculty/">Student List</a>
+            {% endif %}
             <a class="nav-link text-light" href="/accounts/logout">Logout</a>
           {% else %}
             <a class="nav-link text-light" href="{% url 'login' %}">Login</a>
-            <a class="nav-link text-light" href="{% url 'register' %}">Register</a>
           {% endif %}
         </div>
       </div>
     </div>
     {% block content %}{% endblock %}
 </body>
+{% if not user.is_staff %}
+  <footer class="footer mt-4">
+    <div class="row justify-content-center text-center">
+      <a href="#bannerformmodal" data-toggle="modal" data-target="#bannerformmodal">Have a question?  Need help?</a>
+    </div>
+  
+    <div class="modal fade bannerformmodal" id="bannerformmodal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="bannerformmodal" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="bannerformmodal">Help</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <form action="/" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+              Your question will be submitted to {get exact wording}
+                <div class="form-group">
+                  <label for="message-text" class="col-form-label">Question:</label>
+                  <textarea class="form-control" id="message-text" name="message-text"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="submit" name="SubmitQuestion"  class="btn btn-primary">Submit</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </footer>
+{% endif %}
 </html>

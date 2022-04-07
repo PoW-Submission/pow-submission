@@ -8,12 +8,14 @@
   <div class="row">
     <div class="col-12">
       <h4>Your Students</h4>
+      <div>Please click the student email for more details.</div>
       <table class="table-sm table-bordered">
         <thead>
           <tr>
             <td>Student Email</td>
             <td>Track</td>
             <td>Hours</td>
+            <td>Submissions Pending</td>
           </tr>
         </thead>
       {% for student in students%}
@@ -23,6 +25,9 @@
           </td>
           <td> {{student.track}} starting {{student.track.startTerm.label}} </td>
           <td> {{student.approvedHours}}</td>
+          <td class="
+            {% if student.submissionsPending  %}alert-warning">Yes</td>{% endif %}
+            {% if not student.submissionsPending %}alert-success">No</td>{% endif %}
 
         </tr>
       {% endfor %}

@@ -8,6 +8,22 @@
 <div class="container">
   <div class="row mb-4 ">
     <div class="col-6">
+      <h4>Create a Term Plan</h4>
+      <form action="/term/new" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="term_id">To begin, select a Term below and click Start.</label>
+          <select class="form-control" name="term_id" id="term_selection">
+              <option value="" selected="selected">---SELECT---</option>
+              {% for t in terms|dictsort:"id"  %}
+               <option value="{{t.id}}">{{t.label}}</option>
+              {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit" name="Start">Start</button>
+      </form>
+    </div>
+    <div class="col-6">
       <h4>Your Term Plans</h4>
       <table>
       {% for tp in termPlans|dictsort:"id" %}
@@ -20,6 +36,7 @@
             {% if tp.approval == "Approved"  %}alert-success{% endif %}
             {% if tp.approval == "Submitted" %}alert-warning{% endif %}
             {% if tp.approval == "Temp Approved" %}alert-primary{% endif %}
+            {% if tp.approval == "Denied" %}alert-danger{% endif %}
             {% if tp.approval == "" %}{% endif %}"
             >{{tp.approval}}
           </td>
@@ -33,22 +50,6 @@
         </tr>
       {% endfor %}
       </table>
-    </div>
-    <div class="col-6">
-      <h4>Create a Term Plan</h4>
-      <form action="/term/new" method="post">
-        {% csrf_token %}
-        <div class="form-group">
-          <label for="term_id">Term</label>
-          <select class="form-control" name="term_id" id="term_selection">
-              <option value="" selected="selected">---SELECT---</option>
-              {% for t in terms %}
-               <option value="{{t.id}}">{{t.label}}</option>
-              {% endfor %}
-          </select>
-        </div>
-        <button class="btn btn-primary" type="submit" name="Start">Start</button>
-      </form>
     </div>
   </div>
   {% if termPlans %}
@@ -67,6 +68,7 @@
               {% if termPlan.approval == "Approved"  %}"table-success{% endif %}
               {% if termPlan.approval == "Submitted" %}"table-warning{% endif %}
               {% if termPlan.approval == "Temp Approved" %}"table-primary{% endif %}
+              {% if termPlan.approval == "Denied" %}"alert-danger{% endif %}
               {% if termPlan.approval == "" %}"{% endif %}">
               <td scope="row">{{plannedWork.course.label}}</td>
               <td scope="row">{{plannedWork.termPlan.term.label}}</td>
@@ -84,9 +86,6 @@
   
   </table>
   {% endif %}
-  <div class='col-12'>
-    <p>Thank you for your help testing this site.  If you have any questions, comments, or problems, please email them to <a href='mailto:jmwhorton@uams.edu'>jmwhorton@uams.edu</a>.</p>
-  </div>
 </div>
 {% else %}
 <div class="container">
@@ -94,9 +93,14 @@
     <h1 class="display-4">Plan of Work Submission</h1>
     <p class="lead">A form for submitting student plan of work documents.</p>
     <hr class="my-4">
-    <p>Please log in with your UAMS credentials.</p>
-    <a class="btn btn-primary btn-lg" href="/accounts/login/">Login</a>
-    <a class="btn btn-secondary btn-lg" href="/accounts/register/">Register</a>
+    <p>Please enter a valid UAMS email address to login.</p>
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <input class="form-control" type="email" name="username" autofocus="" autocapitalize="none" autocomplete="username" maxlength="255" required="" id="id_username">
+      </div>
+        <button type="submit" class="btn btn-primary">Next</button>
+    </form>
   </div>
 </div>
 {% endif %}

@@ -35,6 +35,15 @@ LOGOUT_REDIRECT_URL = 'home'
 
 AUTH_USER_MODEL = 'users.ADUser'
 
+# Authentication
+
+AUTHENTICATION_BACKENDS = ["core.auth.TokenLogin", 'django.contrib.auth.backends.ModelBackend']
+
+#Email settings
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = '/Users/whortonjustinm/work/email'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -57,6 +66,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# SESSION AGE 5 Minutes
+SESSION_COOKIE_AGE = 120*60
 
 ROOT_URLCONF = 'pow_submission.urls'
 

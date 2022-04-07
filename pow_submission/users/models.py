@@ -38,6 +38,7 @@ class ADUser(AbstractUser):
     email = models.EmailField(max_length=255, unique=True)
     track = models.ForeignKey('core.Track', null=True, on_delete=models.SET_NULL)
     advisor = models.ForeignKey('core.Faculty', null=True, on_delete=models.SET_NULL)
+    always_notify = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -46,6 +47,12 @@ class ADUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+class LoginToken(models.Model):
+    user = models.ForeignKey(ADUser, null=False, on_delete=models.CASCADE) 
+    token = models.CharField(max_length=40, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
 
 class PotentialUser(models.Model):
     email = models.EmailField(max_length=255, unique=True)
