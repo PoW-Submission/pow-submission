@@ -666,7 +666,8 @@ def new_term(request):
             termPlan.save()
             return HttpResponseRedirect(reverse('student_term', args=(termPlan.pk,)))
         else:
-            return HttpResponse("bad form", status=500)
+            messages.error(request, 'An error has occurred.  Please try again.  If the problem persists, please use the help link at the bottom of the page.')
+            return redirect('home')
     else:
         return HttpResponse("require POST", status=405)
 
