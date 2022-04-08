@@ -362,7 +362,9 @@ def student_term(request, termPlan_id):
                         submittedHours += plannedWork.course.units
                         print(plannedWork.course)
 
-                email_message = '{}  has made a submission for {}.\n\n{} hours have been submitted or approved out of {} hoursneeded.'.format(tp.student.email, tp.term.label, submittedHours, totalHoursNeeded)
+                email_message = '{}  has made a submission for {}.\n{} hours have been submitted or approved out of {} hours needed.'.format(tp.student.email, tp.term.label, submittedHours, totalHoursNeeded)
+                if request.POST.get("message-text"):
+                    email_message += '\n\nA comment or question has been added to the submission:\n{}'.format(request.POST.get("message-text"))
                 emailRecipients = []
                 adminFaculty = ADUser.objects.filter(always_notify=True)
                 for faculty in adminFaculty:

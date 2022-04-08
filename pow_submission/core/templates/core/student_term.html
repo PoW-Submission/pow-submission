@@ -7,88 +7,117 @@
 <form action="/student/term/{{tp.pk}}/" method="post">
   <div class="container">
     <div class="row">
-    <div class="col form-group">
-      {% csrf_token %}
-      <h4 class="">Track: {{track.label}} starting {{track.term.label}}</h4>
-      <div class="">
-        <h4>Term: {{tp.term.label}}</h4>
-        {% if tp.approval != "" and tp.approval != None %}
-        <h5>Term Plan Status: {{tp.approval}}</h5>
-        {% endif %}
-        <h5>Student: {{tp.student.email}}</h5>
-        <h5>Advisor: {{tp.student.advisor.name}}
-          <a class="small" href="/configure">[Change]</a>
-        </h5>
-        Please select the courses you'd like to take from the offerings below.
-        'Save' will save your progress for later.  'Save and Submit' will notify 
-        your advisor of your submission.
+      <div class="col form-group">
+        {% csrf_token %}
+        <h4 class="">Track: {{track.label}} starting {{track.term.label}}</h4>
+        <div class="">
+          <h4>Term: {{tp.term.label}}</h4>
+          {% if tp.approval != "" and tp.approval != None %}
+          <h5>Term Plan Status: {{tp.approval}}</h5>
+          {% endif %}
+          <h5>Student: {{tp.student.email}}</h5>
+          <h5>Advisor: {{tp.student.advisor.name}}
+            <a class="small" href="/configure">[Change]</a>
+          </h5>
+          Please select the courses you'd like to take from the offerings below.
+          'Save' will save your progress for later.  'Save and Submit' will notify 
+          your advisor of your submission.
+        </div>
+        <div class="">
+          {% for course_field, placeholder, another_placeholder in form.get_course_fields %}
+          <div > {{ course_field }} </div>
+          {% endfor %}
+          {% if tp.hasComplete == True %}
+          This term already has at least one course with a Completion Status.  No changes can be saved. 
+          {% elif tp.approval == "" %}
+          <button class="btn btn-primary mt-3" type="submit" name="Save">Save</button>
+          <button class="btn btn-primary mt-3 " type="button" data-toggle="modal" data-target="#staticBackdrop2">Save and Submit</button>
+
+          <div class="modal fade" id="staticBackdrop2" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel2" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="staticBackdropLabel2">Attach a comment?</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="form-group">
+                    <label for="message-text" class="col-form-label">Questions or comments will be provided to advisor upon submission:</label>
+                    <textarea class="form-control" id="message-text" name="message-text"></textarea>
+                  </div>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="submit" name="SaveSubmit"  class="btn btn-primary">Submit</button>
+                </div>
+              </div>
+            </div>
+          </div> 
+          {% else %} 
+          <button class="btn btn-primary mt-3 " type="button" data-toggle="modal" data-target="#staticBackdrop1">Save</button>
+
+          <div class="modal fade" id="staticBackdrop1" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel1" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="staticBackdropLabel1">Are you sure?</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  This Term Plan has already been submitted or approved. Saving will remove the submission/approval. 
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="submit" name="Save"  class="btn btn-primary">Yes, Save</button>
+                </div>
+              </div>
+            </div>
+          </div> 
+
+          <button class="btn btn-primary mt-3 " type="button" data-toggle="modal" data-target="#staticBackdrop2">Save and Submit</button>
+
+          <div class="modal fade" id="staticBackdrop2" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel2" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="staticBackdropLabel2">Are you sure?</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  This Term Plan has already been submitted or approved.  Are you sure you would like to resubmit?
+                  <div class="form-group">
+                    <label for="message-text" class="col-form-label">Questions or comments will be provided to advisor upon submission:</label>
+                    <textarea class="form-control" id="message-text" name="message-text"></textarea>
+                  </div>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="submit" name="SaveSubmit"  class="btn btn-primary">Yes, Submit</button>
+                </div>
+              </div>
+            </div>
+          </div> 
+          {% endif %}
+          <a class="btn btn-secondary mt-3" href="/" role="button">Back</a>
+        </div>
       </div>
-      <div class="">
-        {% for course_field, placeholder, another_placeholder in form.get_course_fields %}
-        <div > {{ course_field }} </div>
+      <div class="col">
+        <h3>Qualifying Courses</h3>
+        {% for category in categories %}
+        <h5 class="mt-2">{{category.label}}</h5>
+        {% for course in category.courses.all %}
+        <div>{{course.label}}</div>
         {% endfor %}
-        {% if tp.hasComplete == True %}
-        This term already has at least one course with a Completion Status.  No changes can be saved. 
-        {% elif tp.approval == "" %}
-        <button class="btn btn-primary mt-3" type="submit" name="Save">Save</button>
-        <button class="btn btn-primary mt-3" type="submit" name="SaveSubmit">Save and Submit</button>
-        {% else %} 
-        <button class="btn btn-primary mt-3 " type="button" data-toggle="modal" data-target="#staticBackdrop1">Save</button>
-
-        <div class="modal fade" id="staticBackdrop1" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel1" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="staticBackdropLabel1">Are you sure?</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">
-                This Term Plan has already been submitted or approved. Saving will remove the submission/approval. 
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="submit" name="Save"  class="btn btn-primary">Yes, Save</button>
-              </div>
-            </div>
-          </div>
-        </div> 
-
-        <button class="btn btn-primary mt-3 " type="button" data-toggle="modal" data-target="#staticBackdrop2">Save and Submit</button>
-
-        <div class="modal fade" id="staticBackdrop2" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel2" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="staticBackdropLabel2">Are you sure?</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">
-                This Term Plan has already been submitted or approved.  Are you sure you would like to resubmit?
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="submit" name="SaveSubmit"  class="btn btn-primary">Yes, Submit</button>
-              </div>
-            </div>
-          </div>
-        </div> 
-        {% endif %}
-        <a class="btn btn-secondary mt-3" href="/" role="button">Back</a>
+        {% endfor %}
       </div>
-    </div>
-    <div class="col">
-      <h3>Qualifying Courses</h3>
-      {% for category in categories %}
-      <h5 class="mt-2">{{category.label}}</h5>
-      {% for course in category.courses.all %}
-      <div>{{course.label}}</div>
-      {% endfor %}
-      {% endfor %}
-    </div>
     </div>
   </div>
 </form>
