@@ -647,8 +647,6 @@ def faculty_approve(request, termPlan_id, approval_type):
 @login_required
 def new_term(request):
     if not request.user.is_authenticated:
-    #commented for debugging
-    #if request.user.is_authenticated and request.user.is_staff == False:
         return redirect('home')
     if request.method == 'POST':
         form = NewTerm(request.POST)
@@ -657,6 +655,13 @@ def new_term(request):
             term = models.Term.objects.get(pk=term_id)
             email = request.user.email
             student = models.ADUser.objects.get(email=email)
+            
+            termPlans = models.TermPlan.objects.filter(student=student, term=term)
+            for termPlan in termPlans:
+                if termPlan.plannedWorks.count() > 0:
+                    messages.error(request, 'Term has already been created.')
+                    return redirect('home')
+                
             termPlan = models.TermPlan.objects.create(student=student, term=term)
             termPlan.save()
             return HttpResponseRedirect(reverse('student_term', args=(termPlan.pk,)))
