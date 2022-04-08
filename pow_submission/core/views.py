@@ -34,7 +34,7 @@ def home_view(request):
             email_message = '{}  has submitted a question.\n\n{}'.format(student.email, request.POST.get('message-text'))
             #double check who should receive question
             emailRecipients = []
-            adminFaculty = ADUser.objects.filter(always_notify=True)
+            adminFaculty = Faculty.objects.filter(always_notify=True)
             for faculty in adminFaculty:
                 emailRecipients.append(faculty.email)
             if student.advisor.email not in emailRecipients:
@@ -145,6 +145,11 @@ class configure(UpdateView):
     def get_success_url(self):
         messages.success(self.request, 'Your changes have been saved.')
         return reverse('home',)
+    
+    def get_form(self, *args, **kwargs):
+        form = super().get_form(*args, **kwargs)
+        form.fields['advisor'].queryset = models.Faculty.objects.filter(is_active=True)
+        return form
     
     @login_required
     def configure(request):
@@ -366,7 +371,7 @@ def student_term(request, termPlan_id):
                 if request.POST.get("message-text"):
                     email_message += '\n\nA comment or question has been added to the submission:\n{}'.format(request.POST.get("message-text"))
                 emailRecipients = []
-                adminFaculty = ADUser.objects.filter(always_notify=True)
+                adminFaculty = Faculty.objects.filter(always_notify=True)
                 for faculty in adminFaculty:
                     emailRecipients.append(faculty.email)
                 if tp.student.advisor.email not in emailRecipients:

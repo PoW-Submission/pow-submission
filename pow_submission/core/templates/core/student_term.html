@@ -9,7 +9,7 @@
     <div class="row">
       <div class="col form-group">
         {% csrf_token %}
-        <h4 class="">Track: {{track.label}} starting {{track.term.label}}</h4>
+        <h4 class="">Track: {{track}}</h4>
         <div class="">
           <h4>Term: {{tp.term.label}}</h4>
           {% if tp.approval != "" and tp.approval != None %}

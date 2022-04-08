@@ -59,18 +59,26 @@ class Offering(models.Model):
         return self.course.label
 
 class Track(models.Model):
-    label = models.CharField(max_length=100, unique=True)
+    label = models.CharField(max_length=100)
     term = models.ForeignKey(Term, on_delete=models.CASCADE)
     categories = models.ManyToManyField(Category, through='TrackRequirement', blank=True)
     courses = models.ManyToManyField(Course,related_name='tracks',  blank=True)
+    requiredHours = models.FloatField(default=0)
+    program = models.CharField(max_length=20)
 
     def __str__(self):
-         return self.label
+        if self.program.upper() == 'PHD' or self.program.upper() == 'MS':
+            return self.label + ' (' + self.program + ') ' + ' starting ' + self.term.label
+        else:
+            return self.label + ' starting ' + self.term.label
 
 class TrackRequirement(models.Model):
     track = models.ForeignKey(Track, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     requiredHours = models.FloatField()
+
+    def __str__(self):
+         return str(self.track) + ' - ' + str(self.category)
 
 class TermPlan(models.Model):
     student = models.ForeignKey(ADUser, related_name = 'termPlans', on_delete=models.CASCADE, blank=True)
