@@ -32,20 +32,6 @@ urlpatterns = [
     path('faculty/', views.faculty_home, name='faculty_home'),
     path('faculty/student_overview/<int:student_id>/', views.student_overview, name='student_overview'),
     path('faculty/approve_all/<int:student_id>/', views.approve_all, name='approve_all'),
-    path('accounts/register/', user_views.register, name='register'),
-    path('form/new', views.new_form, name='new_form'),
-    path('term/new', views.new_term, name='new_term'),
-    path('form/<int:form_id>/', views.form_sections, name='form_sections'),
-    path('form/<int:form_id>/<int:section_id>', views.form_main, name='form'),
-    path('form/<int:form_id>/<int:section_id>/preview', views.section_preview, name='preview'),
-    path('form/<int:form_id>/manage', views.form_manage, name='form_manage'),
-    path('form/<int:form_id>/delete', views.form_manage_delete, name='form_manage_delete'),
-    path('form/<int:form_id>/print', views.form_print, name='form_print'),
-    path('form/<int:form_id>/question/<int:question_id>', views.question_main, name='question'),
-    path('form/<int:form_id>/edit_text/<int:question_id>', views.edit_text_edit, name='edit_text'),
-
-    path('debug/questions', views.debug_questions, name='debug_questions'),
-    path('debug/json_dict/<int:form_id>', views.debug_json, name='debug_json'),
 
     url(r'^admin/', admin.site.urls),
 ]
