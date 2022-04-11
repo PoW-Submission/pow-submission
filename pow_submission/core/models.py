@@ -61,7 +61,7 @@ class Track(models.Model):
 class TrackRequirement(models.Model):
     track = models.ForeignKey(Track, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    requiredHours = models.FloatField()
+    requiredHours = models.CharField(max_length=100, help_text='Will display as plain text.  You may enter a range such as \'5-6\'')
 
     def __str__(self):
          return str(self.track) + ' - ' + str(self.category)
