@@ -13,17 +13,19 @@
         <thead>
           <tr>
             <td>Student Email</td>
-            <td>Track</td>
+            <td>Track</td> 
+            <td>Type</td>
             <td>Hours</td>
             <td>Submissions Pending</td>
           </tr>
         </thead>
-      {% for student in students%}
+      {% for student in students|dictsort:"track.program"%}
         <tr>
           <td>
             <a href="{% url 'student_overview' student_id=student.pk %}">{{student.email}}</a> 
           </td>
-          <td> {{student.track}} starting {{student.track.startTerm.label}} </td>
+          <td> {{student.track.label}} starting {{student.track.term}}</td>
+          <td> {{student.track.program}}</td>
           <td> {{student.approvedHours}}</td>
           <td class="
             {% if student.submissionsPending  %}alert-warning">Yes</td>{% endif %}
