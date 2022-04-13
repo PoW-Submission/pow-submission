@@ -23,6 +23,9 @@
             {% if not user.is_staff %}
               <a class="nav-link text-light" href="/configure/">Configure</a>
             {% else %}
+              {% if user.is_superuser %}
+                <a class="nav-link text-light" href="/admin/">Admin</a>
+              {% endif %}
               <a class="nav-link text-light" href="/faculty/">Student List</a>
             {% endif %}
             <a class="nav-link text-light" href="/accounts/logout">Logout</a>
