@@ -104,7 +104,7 @@ class TermPlanForm(forms.ModelForm):
         plannedWorks = PlannedWork.objects.filter(termPlan=termPlan)
         i = -1
         offerings = Offering.objects.filter(term=termPlan.term)
-        for i in range( 4):
+        for i in range( 5):
             fieldName = 'plannedWork_%s' % ( i,)
             categoryName = 'category_%s' % (i,)
             statusName = 'status_%s' % (i,)
@@ -145,7 +145,7 @@ class TermPlanForm(forms.ModelForm):
         plannedWorks = []
         categories = Category.objects.filter(track=track)
         i = 0
-        while i < 4:
+        while i < 5:
           fieldName = 'plannedWork_%s' % (i,)
           categoryName = 'category_%s' % (i,)
           statusName = 'status_%s' % (i,)
