@@ -1,0 +1,27 @@
+{% extends "base_header.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'core/table.css' %}">
+
+<div class="container">
+  <div class="row">
+    <div class="col-6">
+      <form method="post">
+        <div class="form-group">
+          <h2>Configure</h2>
+          {% csrf_token %}
+          <h4>Student: {{ form.instance.email }}</h4>
+          <div class= "mb-2">Please select the student's track plan and advisor.</br>
+          </div>
+          <table>
+            {{ form.as_table }}
+          </table>
+        </div>
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-secondary" href="/faculty/student_overview/{{form.instance.pk}}" role="button">Back</a>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

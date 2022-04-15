@@ -17,11 +17,13 @@ class Faculty(models.Model):
     email = models.EmailField(max_length=255, unique=True)
     name = models.TextField()
     is_active = models.BooleanField(default=True)
+    always_notify = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
 
 class Term(models.Model):
+    id = models.IntegerField(primary_key=True, editable=True)
     label = models.CharField(max_length=50, unique=True)
     courses = models.ManyToManyField(Course, through='Offering')
 
@@ -46,7 +48,7 @@ class Offering(models.Model):
 
 class Track(models.Model):
     label = models.CharField(max_length=100)
-    term = models.ForeignKey(Term, on_delete=models.CASCADE)
+    term = models.ForeignKey(Term, on_delete=models.CASCADE, help_text='This is the starting term for the track.')
     categories = models.ManyToManyField(Category, through='TrackRequirement', blank=True)
     courses = models.ManyToManyField(Course,related_name='tracks',  blank=True)
     requiredHours = models.FloatField(default=0)

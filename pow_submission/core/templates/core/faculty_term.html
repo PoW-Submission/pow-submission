@@ -17,7 +17,7 @@
           {% endif %}
           <h5>Student: {{tp.student.email}}</h5>
           <h5>Advisor: {{tp.student.advisor.name}}
-            <a class="small" href="/configure">[Change]</a>
+            <a class="small" href="/faculty/configure/{{tp.student.pk}}">[Change]</a>
           </h5>
         </div>
       </div>
