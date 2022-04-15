@@ -17,7 +17,6 @@ class Faculty(models.Model):
     email = models.EmailField(max_length=255, unique=True)
     name = models.TextField()
     is_active = models.BooleanField(default=True)
-    always_notify = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

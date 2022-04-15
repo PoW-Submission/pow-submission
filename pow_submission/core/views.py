@@ -33,7 +33,7 @@ def home_view(request):
             email_message = '{}  has submitted a question.\n\n{}'.format(student.email, request.POST.get('message-text'))
             #double check who should receive question
             emailRecipients = []
-            adminFaculty = models.Faculty.objects.filter(always_notify=True)
+            adminFaculty = models.ADUser.objects.filter(always_notify=True)
             for faculty in adminFaculty:
                 emailRecipients.append(faculty.email)
             if student.advisor.email not in emailRecipients:
@@ -152,20 +152,6 @@ class configure(UpdateView):
         form.fields['advisor'].queryset = models.Faculty.objects.filter(is_active=True)
         return form
     
-    @login_required
-    def configure(request):
-        if request.user.is_authenticated:
-            return render(requst,
-                    'core/configure.html',
-                    )
-        else:
-            return redirect('home')
-
-
-#    student = ADUser.objects.get(email=request.user.email)
-#    return render(request,
-#                  'core/configure.html',
-#                  {'student': student})
 
 @login_required
 def faculty_home(request):
@@ -235,6 +221,9 @@ class faculty_configure(UpdateView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
+            student = models.ADUser.objects.get(pk=self.kwargs['student_id'])
+            if (not student.advisor.email == request.user.email and (not request.user.always_notify)):
+                return redirect('home')
             return super().dispatch(request, *args, *kwargs)
         else:
             return redirect('home')
@@ -251,21 +240,6 @@ class faculty_configure(UpdateView):
         form.fields['advisor'].queryset = models.Faculty.objects.filter(is_active=True)
         return form
     
-    @login_required
-    def faculty_configure(request, student_id):
-        self.student_id = student_id
-        student = models.ADUser.objects.get(pk=student_id)
-        if not student:
-            return redirect('home')
-        else:
-            print(student.email)
-        if request.user.is_authenticated and request.user.is_staff:
-            return render(requst,
-                    'core/faculty_configure.html',
-                    {'student': student, }
-                    )
-        else:
-            return redirect('home')
 
 
 class NewEmailForm(forms.Form):
@@ -372,7 +346,7 @@ def student_term(request, termPlan_id):
                 if request.POST.get("message-text"):
                     email_message += '\n\nA comment or question has been added to the submission:\n{}'.format(request.POST.get("message-text"))
                 emailRecipients = []
-                adminFaculty = Faculty.objects.filter(always_notify=True)
+                adminFaculty = ADUser.objects.filter(always_notify=True)
                 for faculty in adminFaculty:
                     emailRecipients.append(faculty.email)
                 if tp.student.advisor.email not in emailRecipients:
