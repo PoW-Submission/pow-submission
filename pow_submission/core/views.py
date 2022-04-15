@@ -45,6 +45,7 @@ def home_view(request):
                     emailRecipients,
                     fail_silently=False,
             )
+            messages.success(request, 'Your message has been sent.')
     elif request.user.is_authenticated and request.user.is_staff:
         return redirect('faculty_home')
 
