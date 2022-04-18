@@ -28,7 +28,7 @@
           <div > {{ course_field }} </div>
           {% endfor %}
           {% if tp.hasComplete == True %}
-          This term already has at least one course with a Completion Status.  No changes can be saved. 
+          **This term already has at least one course marked complete or withdrawn.  No changes can be saved.** </p>
           {% elif tp.approval == "" %}
           <button class="btn btn-primary mt-3" type="submit" name="Save">Save</button>
           <button class="btn btn-primary mt-3 " type="button" data-toggle="modal" data-target="#staticBackdrop2">Save and Submit</button>

@@ -127,7 +127,7 @@ class TermPlanForm(forms.ModelForm):
                                                                     widget=forms.Select(attrs={'class':'w-100'}))
                 self.initial[categoryName] = ""
 
-            choices=  [('','-------'), ('Passed', 'Passed'), ('Failed', 'Failed')] 
+            choices=  [('','-------'), ('Passed', 'Passed'), ('Failed', 'Failed'), ('Withdrawn', 'Withdrawn'),] 
             if i < (len(plannedWorks)) and plannedWorks[i].completionStatus:
                 self.fields[statusName] = forms.ChoiceField(required=False, choices= choices)
                 self.initial[statusName] = plannedWorks[i].completionStatus
