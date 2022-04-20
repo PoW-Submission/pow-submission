@@ -331,10 +331,7 @@ def student_term(request, termPlan_id):
             if 'SaveSubmit' in request.POST:
                 saveForm.save_submit()
 
-                totalHoursNeeded = 0
-                trackRequirements = models.TrackRequirement.objects.filter(track=track)
-                for trackRequirement in trackRequirements:
-                    totalHoursNeeded += trackRequirement.requiredHours
+                totalHoursNeeded = track.requiredHours
                 submittedHours = 0
                 termPlans = models.TermPlan.objects.filter(student=request.user).exclude(plannedWorks=None)
                 for termPlan in [x for x in termPlans if (x.approval == 'Approved' or x.approval == 'Submitted')]:

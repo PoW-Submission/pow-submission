@@ -60,7 +60,7 @@
       <th>Completion Status</th>
     </tr></thead>
     {% for categoryDict in categoryDicts%}
-    <tr><td><h5>{{categoryDict|get_value:'category'}} ({{categoryDict|get_value:'hours'}} hrs approved / {{categoryDict|get_value:'requiredHours'}} hrs required)</h5></td></tr>
+    <tr><td><h5>{{categoryDict|get_value:'category'}} ({{categoryDict|get_value:'hours'}} hrs approved, {{categoryDict|get_value:'requiredHours'}} hrs required)</h5></td></tr>
       {% for termPlan in termPlans %}
         {% for plannedWork in termPlan.plannedWorks.all %}
           {% if categoryDict|get_value:'category' == plannedWork.category %}
