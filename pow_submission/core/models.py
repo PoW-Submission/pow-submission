@@ -72,6 +72,8 @@ class TermPlan(models.Model):
     approver = models.CharField(max_length=100, blank=True, unique=False)
     term = models.ForeignKey(Term, on_delete=models.CASCADE, blank=True)
     approval = models.CharField(max_length=20, blank=True)
+    first_approval = models.BooleanField(default=False)
+    second_approval = models.BooleanField(default=False)
 
     def form(self, *args, **kwargs):
         return TermPlanForm(*args, **kwargs)
@@ -193,6 +195,8 @@ class TermPlanForm(forms.ModelForm):
         termPlan.plannedWorks.all().delete()
         if deleteApproval:
             termPlan.approval = ''
+            termPlan.first_approval = False
+            termPlan.second_approval = False
             termPlan.save()
         for plannedWork in self.cleaned_data["plannedWorks"]:
           plannedWork.save()

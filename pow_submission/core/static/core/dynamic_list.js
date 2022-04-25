@@ -1,3 +1,37 @@
+$('select').change(categoryWarning() );
+
+function categoryWarning() {
+    var showDisclaimer = false;
+    for (let i = 0; i < 5 ; i++) {
+      var element = document.getElementById("id_plannedWork_" + i );
+      var categoryElement = document.getElementById("id_category_" + i);
+      var value = element.value;
+      console.log(value);
+      if (value == "") {
+          categoryElement.style.color = 'black';
+      } else {
+        var selectedCategory = document.getElementById("id_category_" + i).value;
+        var defaultCategoryElement = document.getElementById("table_" + value);
+        if (defaultCategoryElement != null) {
+          var defaultCategory = defaultCategoryElement.innerText;
+          if (selectedCategory == parseInt(defaultCategory)) {
+            categoryElement.style.color = 'black';
+          } else { 
+            categoryElement.style.color = 'red';
+            showDisclaimer = true;
+          }
+        } else {
+          categoryElement.style.color = 'red';
+        }
+      }
+    }
+    if (showDisclaimer) {
+
+    } else {
+
+    }
+}
+
 $('.blankOffering').on('change', function() {
     console.log('hello')
     let $parent = $(this).parent()
@@ -29,6 +63,7 @@ function hideElement() {
 
 $(window).on('load', function() {
     console.log('load')
+    categoryWarning()
     $("input[type='checkbox']").each( function() {
         console.log('load each')
         $(this).closest("tr").find("select[name^='offering']").prop("disabled", !this.checked)

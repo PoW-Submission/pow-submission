@@ -36,7 +36,16 @@
           <td> {{ status_field }} </td>
         </tr>
       {% endfor %}
+      {% for key, value in defaultCategoryDict.items %}
+        <tr hidden>
+          <td id="table_{{key}}" value="{{value}}"> {{value}}  </td>
+        </tr>
+      {% endfor %}
     </table>
+    <div id="disclaimerText"> 
+      <p style="color:red">**A Course Replacement form will need to be submitted for any course not fulfilling 
+      its default track plan category.**</p>
+    </div>
     <button class="btn btn-primary mt-3" type="submit" name="Save">Save</button>
     <button class="btn btn-primary mt-3" type="submit" name="ApproveButton">Approve</button>
     <button class="btn btn-danger mt-3" type="submit" name="DenyButton">Deny</button>

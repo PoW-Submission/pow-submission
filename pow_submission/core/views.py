@@ -264,26 +264,47 @@ def faculty_term(request, termPlan_id):
             deleteApproval = False
             saveForm.save(deleteApproval)
             if 'ApproveButton' in request.POST:
-                termPlan.approval = 'Approved'
-                termPlan.save()
-                email_message = 'Your advisor has approved term {}.'.format(termPlan.term.label)
-                emailRecipients = [student.email]
-                send_mail(
-                        'Plan of Work Submission',
-                        email_message,
-                        'login_retrieval@app.planofwork-submission.com',
-                        emailRecipients,
-                        fail_silently=False,
-                )
+                if (request.user.email == student.advisor.email):
+                    termPlan.first_approval = True
+                    termPlan.approval='Submitted'
+                    termPlan.save()
+                    email_message = '{} has approved term {} for {}.'.format(student.advisor.name, termPlan.term.label, student.email)
+                    emailRecipients = []
+                    adminFaculty = models.ADUser.objects.filter(always_notify=True)
+                    for faculty in adminFaculty:
+                        emailRecipients.append(faculty.email)
+                    send_mail(
+                            'Plan of Work Submission',
+                            email_message,
+                            'login_retrieval@app.planofwork-submission.com',
+                            emailRecipients,
+                            fail_silently=False,
+                    )
+                    messages.success(request, 'Term plan approved and ??? notified for final approval.')
+                elif (request.user.always_notify):
+                    termPlan.second_approval=True
 
-                termPlan.currentPlans.all().delete()
-                for plannedWork in termPlan.plannedWorks.all():
-                    currentPlan = models.CurrentPlan(termPlan = termPlan,
-                                            course = plannedWork.course,
-                                            student=plannedWork.student,
-                                            offering=plannedWork.offering)
-                    currentPlan.save()
-                messages.success(request, 'Term plan successfully approved.')
+                    termPlan.approval = 'Approved'
+                    termPlan.save()
+                    email_message = 'Your advisor has approved term {}.'.format(termPlan.term.label)
+                    #add advisor, maybe everybody
+                    emailRecipients = [student.email]
+                    send_mail(
+                            'Plan of Work Submission',
+                            email_message,
+                            'login_retrieval@app.planofwork-submission.com',
+                            emailRecipients,
+                            fail_silently=False,
+                    )
+
+                    termPlan.currentPlans.all().delete()
+                    for plannedWork in termPlan.plannedWorks.all():
+                        currentPlan = models.CurrentPlan(termPlan = termPlan,
+                                                course = plannedWork.course,
+                                                student=plannedWork.student,
+                                                offering=plannedWork.offering)
+                        currentPlan.save()
+                    messages.success(request, 'Term plan successfully approved.')
             elif 'DenyButton' in request.POST:
                 termPlan.approval = 'Denied'
                 termPlan.save()
@@ -304,13 +325,23 @@ def faculty_term(request, termPlan_id):
 
     form = models.TermPlanForm(instance=termPlan)
     plannedWorks = models.PlannedWork.objects.filter(student=student, termPlan=termPlan.pk)
+    term = termPlan.term
+    offerings = term.offerings
+    defaultCategoryDict = {} 
+    for offering in offerings.all():
+        course = offering.course
+        for category in course.categories.all():
+            if category in categories:
+                #use course.pk and categor.pk
+                defaultCategoryDict[offering.pk] = category.pk
     return render(request, 
                   'core/faculty_term.html',
                   {'tp': termPlan,
                    'plannedWorks': plannedWorks,
                    'track': track,
                    'categories': categories,
-                   'form':form})
+                   'form':form,
+                   'defaultCategoryDict':defaultCategoryDict})
 
 @login_required
 def student_term(request, termPlan_id):
@@ -343,11 +374,11 @@ def student_term(request, termPlan_id):
                 if request.POST.get("message-text"):
                     email_message += '\n\nA comment or question has been added to the submission:\n{}'.format(request.POST.get("message-text"))
                 emailRecipients = []
-                adminFaculty = ADUser.objects.filter(always_notify=True)
-                for faculty in adminFaculty:
-                    emailRecipients.append(faculty.email)
-                if tp.student.advisor.email not in emailRecipients:
-                    emailRecipients.append(tp.student.advisor.email)
+                #adminFaculty = ADUser.objects.filter(always_notify=True)
+                #for faculty in adminFaculty:
+                #    emailRecipients.append(faculty.email)
+                #if tp.student.advisor.email not in emailRecipients:
+                emailRecipients.append(tp.student.advisor.email)
                 send_mail(
                         'Plan of Work Submission',
                         email_message,
