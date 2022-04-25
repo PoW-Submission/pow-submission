@@ -4,6 +4,7 @@ from users.models import ADUser, LoginToken
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse, Http404
 import datetime
 from datetime import timezone
 
@@ -20,7 +21,7 @@ class TokenLogin(ModelBackend):
             
             if loginToken and ((datetime.datetime.now(timezone.utc) - datetime.timedelta(minutes=15)) < loginToken.created_at):
                 return loginToken.user
-        except Http404:
+        except:
             return None
 
         return None 
