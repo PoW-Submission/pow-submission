@@ -1,4 +1,6 @@
-$('select').change(categoryWarning() );
+$('select').on('change', function() {
+  categoryWarning() ;
+})
 
 function categoryWarning() {
     var showDisclaimer = false;
@@ -26,9 +28,9 @@ function categoryWarning() {
       }
     }
     if (showDisclaimer) {
-
+      document.getElementById('disclaimerText').hidden=false;
     } else {
-
+      document.getElementById('disclaimerText').hidden=true;
     }
 }
 
