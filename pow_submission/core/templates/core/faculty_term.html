@@ -13,7 +13,14 @@
         <div class="col-12">
           <h4>Term: {{tp.term.label}}</h4>
           {% if tp.approval != "" and tp.approval != None %}
-            <h5>Term Plan Status: {{tp.approval}}</h5>
+            <h5>Term Plan Status: {{tp.approval}}
+              {% if tp.approval == "Submitted" and not tp.first_approval %}
+                <td> - Awaiting advisor approval</td>
+              {% endif %}
+              {% if tp.approval == "Submitted" and tp.first_approval %}
+                <td>- Awaiting committee approval</td>
+              {% endif %}
+            </h5>
           {% endif %}
           <h5>Student: {{tp.student.email}}</h5>
           <h5>Advisor: {{tp.student.advisor.name}}
@@ -50,7 +57,23 @@
     <button class="btn btn-primary mt-3" type="submit" name="ApproveButton">Approve</button>
     <button class="btn btn-danger mt-3" type="submit" name="DenyButton">Deny</button>
     <a class="btn btn-secondary mt-3" href="/faculty/student_overview/{{tp.student.pk}}" role="button">Back</a>
+
+    {% if currentPlans|length > 0  and tp.approval == 'Submitted' %}
+    <h5 class='mt-4'>Previous Approval:</h5>
+    <table class="table table-sm table-bordered col-6">
+      <thead><tr>
+        <th>Course</th>
+      </tr></thead>
+        {% for currentPlan in currentPlans %}
+          <tr><td>{{currentPlan.course}}</td></tr>
+        {% endfor %}
+    {% endif %}
+
+    
+    </table>
   </div>
+
+
 </form>
 <script type="text/javascript" src = "{% static 'core/dynamic_list.js' %}"></script>
 {% endblock %}

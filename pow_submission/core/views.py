@@ -253,6 +253,7 @@ def faculty_term(request, termPlan_id):
     if not (request.user.is_authenticated and request.user.is_staff):
         return redirect('home')
     termPlan = models.TermPlan.objects.get(pk=termPlan_id)
+    currentApproval = termPlan.approval
     student = termPlan.student
     if (not student.advisor.email == request.user.email and (not request.user.always_notify)):
       return redirect('home')
@@ -264,11 +265,18 @@ def faculty_term(request, termPlan_id):
             deleteApproval = False
             saveForm.save(deleteApproval)
             if 'ApproveButton' in request.POST:
+                if currentApproval == "Approved":
+                    messages.error(request, 'Term plan already approved.')
+                    return redirect('home')
+
                 if (request.user.email == student.advisor.email):
                     termPlan.first_approval = True
                     termPlan.approval='Submitted'
                     termPlan.save()
-                    email_message = '{} has approved term {} for {}.'.format(student.advisor.name, termPlan.term.label, student.email)
+                    email_message = '{} has approved term {} for {}.\n\nCourses:\n'.format(student.advisor.name, termPlan.term.label, student.email)
+                    plannedWorks = termPlan.plannedWorks.all()
+                    for plannedWork in plannedWorks:
+                        email_message += plannedWork.course.label + '\n'
                     emailRecipients = []
                     adminFaculty = models.ADUser.objects.filter(always_notify=True)
                     for faculty in adminFaculty:
@@ -282,11 +290,18 @@ def faculty_term(request, termPlan_id):
                     )
                     messages.success(request, 'Term plan approved and ??? notified for final approval.')
                 elif (request.user.always_notify):
+                    if (termPlan.first_approval==False):
+                        messages.error(request, 'Advisor must first approve the plan.')
+                        return redirect('home')
+
                     termPlan.second_approval=True
 
                     termPlan.approval = 'Approved'
                     termPlan.save()
-                    email_message = 'Your advisor has approved term {}.'.format(termPlan.term.label)
+                    email_message = 'Your advisor has approved term {}.\n\nCourses:\n'.format(termPlan.term.label)
+                    plannedWorks = termPlan.plannedWorks.all()
+                    for plannedWork in plannedWorks:
+                        email_message += plannedWork.course.label + '\n'
                     #add advisor, maybe everybody
                     emailRecipients = [student.email]
                     send_mail(
@@ -334,6 +349,7 @@ def faculty_term(request, termPlan_id):
             if category in categories:
                 #use course.pk and categor.pk
                 defaultCategoryDict[offering.pk] = category.pk
+    currentPlans = models.CurrentPlan.objects.filter(termPlan = termPlan.pk)
     return render(request, 
                   'core/faculty_term.html',
                   {'tp': termPlan,
@@ -341,7 +357,8 @@ def faculty_term(request, termPlan_id):
                    'track': track,
                    'categories': categories,
                    'form':form,
-                   'defaultCategoryDict':defaultCategoryDict})
+                   'defaultCategoryDict':defaultCategoryDict,
+                   'currentPlans':currentPlans})
 
 @login_required
 def student_term(request, termPlan_id):
@@ -356,6 +373,11 @@ def student_term(request, termPlan_id):
         print (category.label)
     if request.method == 'POST':
         #Check to make sure term doesn't have any 'complete' courses
+        for plannedWork in tp.plannedWorks.all():
+            if plannedWork.completionStatus != None:
+                messages.error(request, 'Term Plan already has courses with a completion status.')
+                return redirect('home')
+
         if saveForm.is_valid():
             deleteApproval=True
             saveForm.save(deleteApproval)
@@ -370,9 +392,12 @@ def student_term(request, termPlan_id):
                         submittedHours += plannedWork.course.units
                         print(plannedWork.course)
 
-                email_message = '{}  has made a submission for {}.\n{} hours have been submitted or approved out of {} hours needed.'.format(tp.student.email, tp.term.label, submittedHours, totalHoursNeeded)
+                email_message = '{}  has made a submission for {}.\n{} hours have been submitted or approved out of {} hours needed.\n\nCourses:\n'.format(tp.student.email, tp.term.label, submittedHours, totalHoursNeeded)
+                plannedWorks = tp.plannedWorks.all()
+                for plannedWork in plannedWorks:
+                    email_message += plannedWork.course.label + '\n'
                 if request.POST.get("message-text"):
-                    email_message += '\n\nA comment or question has been added to the submission:\n{}'.format(request.POST.get("message-text"))
+                    email_message += '\nA comment or question has been added to the submission:\n{}'.format(request.POST.get("message-text"))
                 emailRecipients = []
                 #adminFaculty = ADUser.objects.filter(always_notify=True)
                 #for faculty in adminFaculty:
@@ -409,6 +434,7 @@ def student_term(request, termPlan_id):
 
 @login_required
 def approve_all(request, student_id):
+    #Add in if the number of terms is zero, send a warning instead of confirmation
     if request.method == 'POST':
         student = models.ADUser.objects.get(pk=student_id)
         if not (request.user.is_authenticated and request.user.is_staff):
@@ -416,30 +442,69 @@ def approve_all(request, student_id):
         if (not student.advisor.email == request.user.email and (not request.user.always_notify)):
             return redirect('home')
         termPlans = student.termPlans.all()
-        for termPlan in termPlans:
-            if termPlan.approval == 'Submitted':
-                termPlan.approval = 'Approved'
-                termPlan.save()
-                termPlan.currentPlans.all().delete()
-                for plannedWork in termPlan.plannedWorks.all():
-                    currentPlan = models.CurrentPlan(termPlan = termPlan,
-                                            course = plannedWork.course,
-                                            student=plannedWork.student,
-                                            offering=plannedWork.offering)
-                    currentPlan.save()
+        if (request.user.email == student.advisor.email):
+            approvedTerms = []
+            for termPlan in termPlans:
+                if termPlan.approval == 'Submitted' and termPlan.first_approval == False:
+                    termPlan.first_approval = True
+                    approvedTerms.append(termPlan.term)
+                    termPlan.save()
 
-        email_message = 'Your advisor has approved all submitted term plans.'
-        emailRecipients = [student.email]
-        send_mail(
-                'Plan of Work Submission',
-                email_message,
-                'login_retrieval@app.planofwork-submission.com',
-                emailRecipients,
-                fail_silently=False,
-        )
-        messages.success(request, 'All submissions successfully approved.')
+            if len(approvedTerms) == 0:
+                messages.error(request, 'No term plans ready for approval.')
+                return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
 
-        return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
+            email_message = '{} has approved the following terms for {}.\n\n'.format(student.advisor.name, student.email)
+            for term in approvedTerms:
+               email_message += term.label + '\n'
+
+            emailRecipients = []
+            adminFaculty = models.ADUser.objects.filter(always_notify=True)
+            for faculty in adminFaculty:
+                emailRecipients.append(faculty.email)
+            send_mail(
+                    'Plan of Work Submission',
+                    email_message,
+                    'login_retrieval@app.planofwork-submission.com',
+                    emailRecipients,
+                    fail_silently=False,
+            )
+            messages.success(request, 'All submissions successfully approved and sent to ???.')
+
+            return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
+        elif (request.user.always_notify):
+            approvedTerms = []
+            for termPlan in termPlans:
+                if termPlan.approval == 'Submitted' and termPlan.first_approval:
+                    approvedTerms.append(termPlan.term)
+                    termPlan.approval = 'Approved'
+                    termPlan.save()
+                    termPlan.currentPlans.all().delete()
+                    for plannedWork in termPlan.plannedWorks.all():
+                        currentPlan = models.CurrentPlan(termPlan = termPlan,
+                                                course = plannedWork.course,
+                                                student=plannedWork.student,
+                                                offering=plannedWork.offering)
+                        currentPlan.save()
+
+            if len(approvedTerms) == 0:
+                messages.error(request, 'No term plans ready for approval.')
+                return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
+
+            email_message = 'Your advisor has approved the following terms:\n\n'
+            for term in approvedTerms:
+                email_message += term.label + '\n'
+            emailRecipients = [student.email]
+            send_mail(
+                    'Plan of Work Submission',
+                    email_message,
+                    'login_retrieval@app.planofwork-submission.com',
+                    emailRecipients,
+                    fail_silently=False,
+            )
+            messages.success(request, 'All submissions successfully approved.')
+
+            return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
     else:
         return HttpResponse("require POST", status=405)
 

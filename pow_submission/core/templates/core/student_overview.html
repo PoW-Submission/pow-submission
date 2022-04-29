@@ -22,8 +22,15 @@
             {% if tp.approval == "Submitted" %}"alert-warning"{% endif %}
             {% if tp.approval == "Temp Approved" %}"alert-primary"{% endif %}
             {% if tp.approval == "Denied" %}"alert-danger"{% endif %}
-            {% if tp.approval == "" %}""{% endif %}
-          >{{tp.approval}}
+            {% if tp.approval == "" %}""{% endif %} 
+          >
+           {{tp.approval}}
+           {% if tp.approval == "Submitted" and not tp.first_approval %}
+             <td> - Awaiting advisor approval</td>
+           {% endif %}
+           {% if tp.approval == "Submitted" and tp.first_approval %}
+             <td>- Awaiting committee approval</td>
+           {% endif %}
           </td>
         </tr>
       {% endfor %}
