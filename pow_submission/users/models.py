@@ -39,6 +39,7 @@ class ADUser(AbstractUser):
     track = models.ForeignKey('core.Track', null=True, on_delete=models.SET_NULL)
     advisor = models.ForeignKey('core.Faculty', null=True, on_delete=models.SET_NULL)
     always_notify= models.BooleanField(default=False)
+    is_faculty = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

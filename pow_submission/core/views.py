@@ -23,7 +23,7 @@ def get_value(dictionary, key):
 def home_view(request):
     consent_forms = []
 
-    if request.user.is_authenticated and request.user.is_staff == False:
+    if request.user.is_authenticated and request.user.is_faculty == False:
         termPlans = models.TermPlan.objects.filter(student__email=request.user.email).exclude(plannedWorks=None)
         track = request.user.track
         if track == None:
@@ -46,7 +46,7 @@ def home_view(request):
                     fail_silently=False,
             )
             messages.success(request, 'Your message has been sent.')
-    elif request.user.is_authenticated and request.user.is_staff:
+    elif request.user.is_authenticated and request.user.is_faculty:
         return redirect('faculty_home')
 
     else:
@@ -104,7 +104,7 @@ def login_view(request):
 
             token = secrets.token_urlsafe(20)
             loginToken = LoginToken.objects.create(user=student, token=token)
-            login_url =  'http://localhost:8000/accounts/login?token={}'.format(token)
+            login_url =  'http://plan-of-work-dev.apps.dbmi.cloud/accounts/login?token={}'.format(token)
             email_message = "Here is your login URL for Plan of Work Submission\n\n{}".format(login_url)
             send_mail(
                     'Plan of Work Submission',
@@ -155,11 +155,11 @@ class configure(UpdateView):
 
 @login_required
 def faculty_home(request):
-    if not (request.user.is_authenticated and request.user.is_staff):
+    if not (request.user.is_authenticated and request.user.is_faculty):
         return redirect('home')
     students = ADUser.objects.filter(advisor__email=request.user.email)
     if request.user.always_notify:
-        students = ADUser.objects.filter(is_staff=False).filter(track__isnull=False)
+        students = ADUser.objects.filter(is_faculty=False).filter(track__isnull=False)
     for student in students:
         approvedHours = 0
         submissionsPending = False
@@ -178,7 +178,7 @@ def faculty_home(request):
                   {'students': students})
 @login_required
 def student_overview(request, student_id):
-    if not (request.user.is_authenticated and request.user.is_staff):
+    if not (request.user.is_authenticated and request.user.is_faculty):
         return redirect('home')
     student = ADUser.objects.get(pk=student_id)
     if (not student.advisor.email == request.user.email and (not request.user.always_notify)):
@@ -250,10 +250,12 @@ class NewTerm(forms.Form):
 
 @login_required
 def faculty_term(request, termPlan_id):
-    if not (request.user.is_authenticated and request.user.is_staff):
+    if not (request.user.is_authenticated and request.user.is_faculty):
         return redirect('home')
     termPlan = models.TermPlan.objects.get(pk=termPlan_id)
     currentApproval = termPlan.approval
+    currentFirstApproval = termPlan.first_approval
+    currentSecondApproval = termPlan.second_approval
     student = termPlan.student
     if (not student.advisor.email == request.user.email and (not request.user.always_notify)):
       return redirect('home')
@@ -288,12 +290,13 @@ def faculty_term(request, termPlan_id):
                             emailRecipients,
                             fail_silently=False,
                     )
-                    messages.success(request, 'Term plan approved and ??? notified for final approval.')
+                    messages.success(request, 'Term plan approved, and Director of Education notified for final approval.')
                 elif (request.user.always_notify):
-                    if (termPlan.first_approval==False):
+                    if (currentFirstApproval==False):
                         messages.error(request, 'Advisor must first approve the plan.')
                         return redirect('home')
 
+                    termPlan.first_approval=True
                     termPlan.second_approval=True
 
                     termPlan.approval = 'Approved'
@@ -363,7 +366,7 @@ def faculty_term(request, termPlan_id):
 @login_required
 def student_term(request, termPlan_id):
     tp = models.TermPlan.objects.get(pk=termPlan_id)
-    if not (request.user.is_authenticated and request.user.is_staff == False and tp.student == request.user):
+    if not (request.user.is_authenticated and request.user.is_faculty == False and tp.student == request.user):
         return redirect('home')
     saveForm = models.TermPlanForm(request.POST, instance=tp)
     track = request.user.track
@@ -437,7 +440,7 @@ def approve_all(request, student_id):
     #Add in if the number of terms is zero, send a warning instead of confirmation
     if request.method == 'POST':
         student = models.ADUser.objects.get(pk=student_id)
-        if not (request.user.is_authenticated and request.user.is_staff):
+        if not (request.user.is_authenticated and request.user.is_faculty):
             return redirect('home')
         if (not student.advisor.email == request.user.email and (not request.user.always_notify)):
             return redirect('home')
@@ -469,7 +472,7 @@ def approve_all(request, student_id):
                     emailRecipients,
                     fail_silently=False,
             )
-            messages.success(request, 'All submissions successfully approved and sent to ???.')
+            messages.success(request, 'All submissions successfully approved and sent to Director of Education.')
 
             return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
         elif (request.user.always_notify):
@@ -513,7 +516,7 @@ def faculty_approve(request, termPlan_id, approval_type):
     if request.method == 'POST':
         termPlan = models.TermPlan.objects.get(pk=termPlan_id)
         student = termPlan.student
-        if not (request.user.is_authenticated and request.user.is_staff):
+        if not (request.user.is_authenticated and request.user.is_faculty):
             return redirect('home')
         if not student.advisor.email == request.user.email:
         #add - and request.user.email not in (3 admin faculty)
