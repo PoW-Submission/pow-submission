@@ -39,6 +39,10 @@ AUTH_USER_MODEL = 'users.ADUser'
 
 AUTHENTICATION_BACKENDS = ["core.auth.TokenLogin", 'django.contrib.auth.backends.ModelBackend']
 
+# Login URL
+
+LOGIN_URL = "http://localhost:8000"
+
 #Email settings
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'

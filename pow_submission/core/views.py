@@ -7,6 +7,7 @@ from django.contrib import messages
 from core import models
 from users.models import PotentialUser, ADUser, LoginToken
 from django import forms
+from django.conf import settings
 from django.urls import reverse
 from django.template.defaulttags import register
 from django.core.mail import send_mail
@@ -80,7 +81,6 @@ def home_view(request):
                    'categoryDicts':categoryDicts})
 
 def login_view(request):
-    print('login time')
     if request.user.is_authenticated:
         return redirect('home')
     else:
@@ -104,7 +104,7 @@ def login_view(request):
 
             token = secrets.token_urlsafe(20)
             loginToken = LoginToken.objects.create(user=student, token=token)
-            login_url =  'http://plan-of-work-dev.apps.dbmi.cloud/accounts/login?token={}'.format(token)
+            login_url =  '{}/accounts/login?token={}'.format(settings.LOGIN_URL, token)
             email_message = "Here is your login URL for Plan of Work Submission\n\n{}".format(login_url)
             send_mail(
                     'Plan of Work Submission',
@@ -119,7 +119,6 @@ def login_view(request):
         elif request.method == 'GET':
             requestToken = request.GET.get('token')
             if requestToken:
-                print(requestToken)
                 user = authenticate(request, token=requestToken)
                 if user is not None:
                     login(request, user)
@@ -149,6 +148,7 @@ class configure(UpdateView):
     
     def get_form(self, *args, **kwargs):
         form = super().get_form(*args, **kwargs)
+        form.fields['track'].queryset = models.Track.objects.all().order_by('-term', 'label')
         form.fields['advisor'].queryset = models.Faculty.objects.filter(is_active=True)
         return form
     
@@ -237,6 +237,7 @@ class faculty_configure(UpdateView):
     
     def get_form(self, *args, **kwargs):
         form = super().get_form(*args, **kwargs)
+        form.fields['track'].queryset = models.Track.objects.all().order_by('-term', 'label')
         form.fields['advisor'].queryset = models.Faculty.objects.filter(is_active=True)
         return form
     
@@ -371,9 +372,6 @@ def student_term(request, termPlan_id):
     saveForm = models.TermPlanForm(request.POST, instance=tp)
     track = request.user.track
     categories = models.Category.objects.filter(track=track)
-    print('categories here ')
-    for category in categories:
-        print (category.label)
     if request.method == 'POST':
         #Check to make sure term doesn't have any 'complete' courses
         for plannedWork in tp.plannedWorks.all():
@@ -393,7 +391,6 @@ def student_term(request, termPlan_id):
                 for termPlan in [x for x in termPlans if (x.approval == 'Approved' or x.approval == 'Submitted')]:
                     for plannedWork in termPlan.plannedWorks.all():
                         submittedHours += plannedWork.course.units
-                        print(plannedWork.course)
 
                 email_message = '{}  has made a submission for {}.\n{} hours have been submitted or approved out of {} hours needed.\n\nCourses:\n'.format(tp.student.email, tp.term.label, submittedHours, totalHoursNeeded)
                 plannedWorks = tp.plannedWorks.all()

@@ -113,7 +113,7 @@
         <h3>Qualifying Courses</h3>
         {% for category in categories %}
         <h5 class="mt-2">{{category.label}}</h5>
-        {% for course in category.courses.all %}
+        {% for course in category.courses.all|dictsort:'label' %}
         <div>{{course.label}}</div>
         {% endfor %}
         {% endfor %}

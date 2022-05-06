@@ -10,6 +10,9 @@ class Course(models.Model):
     label = models.TextField()
     units = models.FloatField()
 
+    class Meta:
+        ordering = ['label']
+
     def __str__(self):
         return self.label
 
@@ -166,11 +169,8 @@ class TermPlanForm(forms.ModelForm):
                       category = self.cleaned_data[categoryName]
                   else:
                       category = None
-                      print('category none')
                       for categoryChoice in categories:
-                          print('category choice ' + categoryChoice.label)
                           if (categoryChoice in offering.course.categories.all()):
-                              print('got it ' + categoryChoice.label)
                               category = categoryChoice
                   plannedWorks.append(PlannedWork(
                       termPlan=termPlan,

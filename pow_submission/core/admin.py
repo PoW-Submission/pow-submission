@@ -1,11 +1,18 @@
 from django.contrib import admin
 from django.apps import apps
+from django.db import models
+from django.forms import SelectMultiple
 
 
-models = apps.get_models()
+appModels = apps.get_models()
 
-for model in models:
+class CustomModelAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'25'})},
+    }
+
+for model in appModels:
     try:
-        admin.site.register(model)
+        admin.site.register(model, CustomModelAdmin)
     except admin.sites.AlreadyRegistered:
         pass

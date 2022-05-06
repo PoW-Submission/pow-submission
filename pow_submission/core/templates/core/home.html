@@ -15,7 +15,7 @@
           <label for="term_id">To begin, select a Term below and click Start.</label>
           <select class="form-control" name="term_id" id="term_selection">
               <option value="" selected="selected">---SELECT---</option>
-              {% for t in terms|dictsort:"id"  %}
+              {% for t in terms|dictsortreversed:"id"  %}
                <option value="{{t.id}}">{{t.label}}</option>
               {% endfor %}
           </select>
