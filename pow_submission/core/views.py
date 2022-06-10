@@ -1,3 +1,6 @@
+import urllib
+import json
+
 from django.views.generic import ListView, CreateView, UpdateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -51,8 +54,10 @@ def home_view(request):
         return redirect('faculty_home')
 
     else:
+        sitekey = settings.GOOGLE_RECAPTCHA_SITE_KEY
         return render(request,
-                  'core/home.html',)
+                  'core/home.html',
+                  {'sitekey': sitekey})
     categories = models.Category.objects.filter(track=track)
     categoryDicts = []
     for category in categories:
@@ -85,37 +90,55 @@ def login_view(request):
         return redirect('home')
     else:
         if request.method == 'POST':
-            userEmail = request.POST.get('username')
-            try:
-                validate_email(userEmail)
-            except ValidationError as e:
-                print("bad email, details:", e)
-                return redirect('home')
-                
-            domain = userEmail[-9:]
-            if domain.lower() != '@uams.edu':
-                #add error message
-                return redirect('home')
-            student = ADUser.objects.filter(email=userEmail)
-            if not student:
-                student = ADUser.objects.create_user(email=userEmail, password=None)
-            else:
-                student = student[0]
+            ''' Begin reCAPTCHA validation '''
+            recaptcha_response = request.POST.get('g-recaptcha-response')
+            url = 'https://www.google.com/recaptcha/api/siteverify'
+            values = {
+                    'secret': settings.GOOGLE_RECAPTCHA_SECRET_KEY,
+                    'response': recaptcha_response
+            }
+            data = urllib.parse.urlencode(values).encode()
+            req = urllib.request.Request(url, data=data)
+            response = urllib.request.urlopen(req)
+            result = json.loads(response.read().decode())
+            ''' End reCAPTCHA validation '''
 
-            token = secrets.token_urlsafe(20)
-            loginToken = LoginToken.objects.create(user=student, token=token)
-            login_url =  '{}/accounts/login?token={}'.format(settings.LOGIN_URL, token)
-            email_message = "Here is your login URL for Plan of Work Submission\n\n{}".format(login_url)
-            send_mail(
-                    'Plan of Work Submission',
-                    email_message,
-                    'login_retrieval@app.planofwork-submission.com',
-                    [userEmail],
-                    fail_silently=False,
-            )
-            return render(request,
-                          'registration/login.html',
-                          {})
+            if result['success']:
+                userEmail = request.POST.get('username')
+                try:
+                    validate_email(userEmail)
+                except ValidationError as e:
+                    print("bad email, details:", e)
+                    return redirect('home')
+                    
+                domain = userEmail[-9:]
+                if domain.lower() != '@uams.edu':
+                    #add error message
+                    return redirect('home')
+                student = ADUser.objects.filter(email=userEmail)
+                if not student:
+                    request.session['temp_value'] = userEmail
+                    student = ADUser.objects.create_user(email=userEmail, password=None)
+                else:
+                    student = student[0]
+
+                token = secrets.token_urlsafe(20)
+                loginToken = LoginToken.objects.create(user=student, token=token)
+                login_url =  '{}/accounts/login?token={}'.format(settings.LOGIN_URL, token)
+                email_message = "Here is your login URL for Plan of Work Submission\n\n{}".format(login_url)
+                send_mail(
+                        'Plan of Work Submission',
+                        email_message,
+                        'login_retrieval@app.planofwork-submission.com',
+                        [userEmail],
+                        fail_silently=False,
+                )
+                return render(request,
+                              'registration/login.html',
+                              {})
+            else:
+                messages.error(request, 'Invalid reCAPTCHA. Please try again.')
+                return redirect('home')
         elif request.method == 'GET':
             requestToken = request.GET.get('token')
             if requestToken:

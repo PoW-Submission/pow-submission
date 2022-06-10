@@ -108,6 +108,16 @@ spec:
               secretKeyRef:
                   name: pow-secret
                   key: django_secret_key
+        - name: GOOGLE_RECAPTCHA_SECRET_KEY
+          valueFrom:
+              secretKeyRef:
+                  name: pow-secret
+                  key: captcha_secret_key
+        - name: GOOGLE_RECAPTCHA_SITE_KEY
+          valueFrom:
+              secretKeyRef:
+                  name: pow-secret
+                  key: captcha_site_key
         ports:
         - containerPort: 3000
           protocol: TCP

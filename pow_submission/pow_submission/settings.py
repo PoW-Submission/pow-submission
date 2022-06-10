@@ -48,6 +48,12 @@ LOGIN_URL = "http://localhost:8000"
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = '/Users/whortonjustinm/work/email'
 
+# reCAPTCHA settings
+# These settings are for a 'localhost' test
+
+GOOGLE_RECAPTCHA_SECRET_KEY = '6LfYx9sfAAAAAGX8-xTdp2Z76ObLyAoWJBKmsAvm'
+GOOGLE_RECAPTCHA_SITE_KEY= '6LfYx9sfAAAAAGzC43LyuDXdnAragX5pF4lBE48l'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

@@ -3,6 +3,8 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'core/table.css' %}">
 <script src="{% static 'core/tooltip.js' %}" ></script>
+<script src="{% static 'core/captcha.js' %}" ></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
 {% if user.is_authenticated %}
 <div class="container">
@@ -94,12 +96,12 @@
     <p class="lead">A form for submitting student plan of work documents.</p>
     <hr class="my-4">
     <p>Please enter a valid UAMS email address to login.</p>
-    <form method="post" action="{% url 'login' %}">
+    <form id='login-form' method="post" action="{% url 'login' %}">
       {% csrf_token %}
       <div class="form-group">
         <input class="form-control" type="email" name="username" autofocus="" autocapitalize="none" autocomplete="username" maxlength="255" required="" id="id_username">
       </div>
-        <button type="submit" class="btn btn-primary">Next</button>
+      <button class="g-recaptcha btn btn-primary" data-sitekey="{{sitekey}}"  data-callback='onSubmit'>Next</button>
     </form>
   </div>
 </div>

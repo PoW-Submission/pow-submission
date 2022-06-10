@@ -8,7 +8,7 @@ DEBUG = False
 
 # Login URL
 
-LOGIN_URL = "http://plan-of-work-dev.apps.dbmi.cloud"
+LOGIN_URL = "https://plan-of-work-dev.apps.dbmi.cloud"
 
 #Email settings
 
@@ -16,6 +16,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_FILE_PATH = ''
 EMAIL_HOST = 'mail.uams.edu'
 EMAIL_PORT = 25
+
+# reCAPTCHA settings
+
+GOOGLE_RECAPTCHA_SECRET_KEY = os.getenv('GOOGLE_RECAPTCHA_SECRET_KEY', 'mysecretkey')
+GOOGLE_RECAPTCHA_SITE_KEY = os.getenv('GOOGLE_RECAPTCHA_SITE_KEY', 'mysitekey')
 
 DATABASES = {
     'default': {
