@@ -1,6 +1,9 @@
 from django.db import models
+from django.utils import  timezone
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import ugettext_lazy as _
+
 
 class CustomUserManager(BaseUserManager):
     """
@@ -36,8 +39,8 @@ class CustomUserManager(BaseUserManager):
 class ADUser(AbstractUser):
     username = None
     email = models.EmailField(max_length=255, unique=True)
-    track = models.ForeignKey('core.Track', null=True, on_delete=models.SET_NULL)
-    advisor = models.ForeignKey('core.Faculty', null=True, on_delete=models.SET_NULL)
+    track = models.ForeignKey('core.Track', blank=True, null=True, on_delete=models.SET_NULL)
+    advisor = models.ForeignKey('core.Faculty', blank=True, null=True, on_delete=models.SET_NULL)
     always_notify= models.BooleanField(default=False)
     is_faculty = models.BooleanField(default=False)
 

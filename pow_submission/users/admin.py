@@ -1,22 +1,29 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group
 
+
+from .forms import CustomUserCreationForm, CustomUserChangeForm
 from .models import ADUser
 
 
 class CustomUserAdmin(UserAdmin):
+    add_form = CustomUserCreationForm
+    form = CustomUserChangeForm
     model = ADUser
-    list_display = ('email', 'is_staff', 'is_active',)
-    list_filter = ('email', 'is_staff', 'is_active',)
+    list_display = ('email', 'is_superuser', 'always_notify', 'is_faculty',)
+    list_filter= ('email', 'is_superuser', 'always_notify', 'is_faculty',)
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Permissions', {'fields': ('is_staff', 'is_active')}),
+        (None, {'fields': ('email', 'date_joined', 'is_active')}),
+        ('Permissions', {'fields': ('is_superuser', 'always_notify', 'is_faculty')}),
     )
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'is_staff', 'is_active')}
-        ),
+        (None, {'fields': ('email', 'date_joined', 'is_active')}),
+        ('Permissions', {'fields': ('is_superuser', 'always_notify', 'is_faculty')}),
     )
     search_fields = ('email',)
     ordering = ('email',)
+
+admin.site.unregister(ADUser)
+admin.site.register(ADUser, CustomUserAdmin)
+admin.site.unregister(Group)
