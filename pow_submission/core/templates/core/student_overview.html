@@ -11,7 +11,7 @@
       <h4>Track: {{student.track}}</h4>
       <h4>Term Plans</h4>
       <table>
-      {% for tp in termPlans%}
+      {% for tp in termPlans|dictsort:"id" %}
         <tr>
           <td>&#8226;</td>
           <td>
