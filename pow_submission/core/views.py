@@ -34,7 +34,7 @@ def home_view(request):
             return redirect('configure')
         if request.POST.get('message-text'):
             student = request.user
-            email_message = '{}  has submitted a question.\n\n{}'.format(student.email, request.POST.get('message-text'))
+            email_message = '{}  has submitted a question.\n\n{}\n\nLogin: {}'.format(student.email, request.POST.get('message-text'), settings.LOGIN_URL)
             #double check who should receive question
             emailRecipients = []
             adminFaculty = models.ADUser.objects.filter(always_notify=True)
@@ -45,7 +45,7 @@ def home_view(request):
             send_mail(
                     'Plan of Work Submission - Help Request',
                     email_message,
-                    'login_retrieval@app.planofwork-submission.com',
+                    'do_not_reply@app.planofwork-submission.com',
                     emailRecipients,
                     fail_silently=False,
             )
@@ -303,6 +303,7 @@ def faculty_term(request, termPlan_id):
                     plannedWorks = termPlan.plannedWorks.all()
                     for plannedWork in plannedWorks:
                         email_message += plannedWork.course.label + '\n'
+                    email_message += '\n\nPlease login to grant final approval: {}/faculty/student_overview/{}/'.format(settings.LOGIN_URL, student.pk)
                     emailRecipients = []
                     adminFaculty = models.ADUser.objects.filter(always_notify=True)
                     for faculty in adminFaculty:
@@ -310,7 +311,7 @@ def faculty_term(request, termPlan_id):
                     send_mail(
                             'Plan of Work Submission',
                             email_message,
-                            'login_retrieval@app.planofwork-submission.com',
+                            'do_not_reply@app.planofwork-submission.com',
                             emailRecipients,
                             fail_silently=False,
                     )
@@ -330,11 +331,12 @@ def faculty_term(request, termPlan_id):
                     for plannedWork in plannedWorks:
                         email_message += plannedWork.course.label + '\n'
                     #add advisor, maybe everybody
+                    email_message += '\n\nLogin: {}'.format(settings.LOGIN_URL)
                     emailRecipients = [student.email]
                     send_mail(
                             'Plan of Work Submission',
                             email_message,
-                            'login_retrieval@app.planofwork-submission.com',
+                            'do_not_reply@app.planofwork-submission.com',
                             emailRecipients,
                             fail_silently=False,
                     )
@@ -350,12 +352,12 @@ def faculty_term(request, termPlan_id):
             elif 'DenyButton' in request.POST:
                 termPlan.approval = 'Denied'
                 termPlan.save()
-                email_message = 'Your advisor has denied term {}.'.format(termPlan.term.label)
+                email_message = 'Your advisor has denied term {}.\n\nLogin: {}'.format(termPlan.term.label, settings.LOGIN_URL)
                 emailRecipients = [student.email]
                 send_mail(
                         'Plan of Work Submission',
                         email_message,
-                        'login_retrieval@app.planofwork-submission.com',
+                        'do_not_reply@app.planofwork-submission.com',
                         emailRecipients,
                         fail_silently=False,
                 )
@@ -421,6 +423,7 @@ def student_term(request, termPlan_id):
                     email_message += plannedWork.course.label + '\n'
                 if request.POST.get("message-text"):
                     email_message += '\nA comment or question has been added to the submission:\n{}'.format(request.POST.get("message-text"))
+                email_message += '\n\nLogin to approve submission: {}/faculty/student_overview/{}/'.format(settings.LOGIN_URL, tp.student.pk)
                 emailRecipients = []
                 #adminFaculty = ADUser.objects.filter(always_notify=True)
                 #for faculty in adminFaculty:
@@ -430,7 +433,7 @@ def student_term(request, termPlan_id):
                 send_mail(
                         'Plan of Work Submission',
                         email_message,
-                        'login_retrieval@app.planofwork-submission.com',
+                        'do_not_reply@app.planofwork-submission.com',
                         emailRecipients,
                         fail_silently=False,
                 )
@@ -480,7 +483,7 @@ def approve_all(request, student_id):
             email_message = '{} has approved the following terms for {}.\n\n'.format(student.advisor.name, student.email)
             for term in approvedTerms:
                email_message += term.label + '\n'
-
+            email_message += '\n\nLogin to finalize submission: {}/faculty/student_overview/{}/'.format(settings.LOGIN_URL, student.pk)
             emailRecipients = []
             adminFaculty = models.ADUser.objects.filter(always_notify=True)
             for faculty in adminFaculty:
@@ -488,7 +491,7 @@ def approve_all(request, student_id):
             send_mail(
                     'Plan of Work Submission',
                     email_message,
-                    'login_retrieval@app.planofwork-submission.com',
+                    'do_not_reply@app.planofwork-submission.com',
                     emailRecipients,
                     fail_silently=False,
             )
@@ -514,14 +517,14 @@ def approve_all(request, student_id):
                 messages.error(request, 'No term plans ready for approval.')
                 return HttpResponseRedirect(reverse('student_overview', args=(student.pk,)))
 
-            email_message = 'Your advisor has approved the following terms:\n\n'
+            email_message = 'Your advisor has approved the following terms:\n\nLogin:  {}'.format(settings.LOGIN_URL)
             for term in approvedTerms:
                 email_message += term.label + '\n'
             emailRecipients = [student.email]
             send_mail(
                     'Plan of Work Submission',
                     email_message,
-                    'login_retrieval@app.planofwork-submission.com',
+                    'do_not_reply@app.planofwork-submission.com',
                     emailRecipients,
                     fail_silently=False,
             )
