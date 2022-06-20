@@ -41,8 +41,8 @@ class ADUser(AbstractUser):
     email = models.EmailField(max_length=255, unique=True)
     track = models.ForeignKey('core.Track', blank=True, null=True, on_delete=models.SET_NULL)
     advisor = models.ForeignKey('core.Faculty', blank=True, null=True, on_delete=models.SET_NULL)
-    always_notify= models.BooleanField(default=False)
-    is_faculty = models.BooleanField(default=False)
+    always_notify= models.BooleanField(default=False, help_text='For Education Leadership.  Will always receive email notifications and can finalize term plans.')
+    is_faculty = models.BooleanField(default=False, help_text='Determines whether user can see Faculty or Student side of application.')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
