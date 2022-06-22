@@ -69,10 +69,13 @@ def home_view(request):
         trackRequirement = models.TrackRequirement.objects.get(category=category, track=track)
         categoryDicts.append({'category':category, 'hours':(int)(approvedHours), 'requiredHours':(trackRequirement.requiredHours)})
     termPlanDicts = []
+    showNoCategory = False
     for termPlan in termPlans:
         hours = 0
         for plannedWork in termPlan.plannedWorks.all():
             hours += plannedWork.course.units
+            if plannedWork.category == None:
+                showNoCategory = True;
         termPlanDicts.append({'termPlan':termPlan, 'hours':(int)(hours)})
     terms = []
     terms = models.Term.objects.all()
@@ -83,7 +86,8 @@ def home_view(request):
                    'terms': terms,
                    'track': track,
                    'categories': categories,
-                   'categoryDicts':categoryDicts})
+                   'categoryDicts':categoryDicts,
+                   'showNoCategory':showNoCategory})
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -220,10 +224,13 @@ def student_overview(request, student_id):
         trackRequirement = models.TrackRequirement.objects.get(category=category, track=track)
         categoryDicts.append({'category':category, 'hours':(int)(approvedHours), 'requiredHours':(trackRequirement.requiredHours)})
     termPlanDicts = []
+    showNoCategory = False
     for termPlan in termPlans:
         hours = 0
         for plannedWork in termPlan.plannedWorks.all():
             hours += plannedWork.course.units
+            if plannedWork.category == None:
+                showNoCategory = True;
         termPlanDicts.append({'termPlan':termPlan, 'hours':(int)(hours)})
     terms = []
     terms = models.Term.objects.all()
@@ -235,7 +242,8 @@ def student_overview(request, student_id):
                    'terms': terms,
                    'track': track,
                    'categories': categories,
-                   'categoryDicts':categoryDicts})
+                   'categoryDicts':categoryDicts,
+                   'showNoCategory':showNoCategory})
 
 class faculty_configure(UpdateView): 
     model = ADUser
