@@ -1,0 +1,55 @@
+{% extends "base_header.html" %}
+{% block content %}
+{% load static %}
+
+<div class="container">
+  <div class="row mb-4 ">
+    <div class="col-6">
+      <h4>Copy offerings to new term</h4>
+      <form action="/faculty/copy/" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="term_id_from">From Term: </label>
+          <select class="form-control" name="term_id_from" id="term_selection_from">
+              <option value="" selected="selected">---SELECT---</option>
+              {% for t in terms|dictsortreversed:"id"  %}
+               <option value="{{t.id}}">{{t.label}}</option>
+              {% endfor %}
+          </select>
+          <label for="term_id_to">To Term: </label>
+          <select class="form-control" name="term_id_to" id="term_selection_to">
+              <option value="" selected="selected">---SELECT---</option>
+              {% for t in terms|dictsortreversed:"id"  %}
+               <option value="{{t.id}}">{{t.label}}</option>
+              {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit" name="CopyOfferings">Copy</button>
+      </form>
+    </div>
+    <div class="col-6">
+      <h4>Copy categories (requirements) to new track</h4>
+      <form action="/faculty/copy/" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="track_id_from">From Track: </label>
+          <select class="form-control" name="track_id_from" id="track_selection_from">
+              <option value="" selected="selected">---SELECT---</option>
+              {% for track in tracks|dictsortreversed:"label"  %}
+               <option value="{{track.id}}">{{track}}</option>
+              {% endfor %}
+          </select>
+          <label for="track_id_to">To Track: </label>
+          <select class="form-control" name="track_id_to" id="track_selection_to">
+              <option value="" selected="selected">---SELECT---</option>
+              {% for track in tracks|dictsortreversed:"label"  %}
+               <option value="{{track.id}}">{{track}}</option>
+              {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-primary" type="submit" name="CopyCategories">Copy</button>
+      </form>
+    </div>
+  </div>
+
+{% endblock %}

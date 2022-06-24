@@ -22,6 +22,7 @@
             {% block nav_link %}{% endblock %}
             {% if user.is_superuser %}
               <a class="nav-link text-light" href="/admin/">Admin</a>
+              <a class="nav-link text-light" href="/faculty/copy/">Copy</a>
             {% endif %}
             {% if not user.is_faculty %}
               <a class="nav-link text-light" href="/configure/">Configure</a>

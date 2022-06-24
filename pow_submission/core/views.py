@@ -179,6 +179,50 @@ class configure(UpdateView):
         form.fields['advisor'].queryset = models.Faculty.objects.filter(is_active=True)
         return form
     
+@login_required
+def copy(request):
+    if not (request.user.is_authenticated and request.user.is_superuser):
+        return redirect('home')
+    if request.method == 'POST':
+        print('copy time 1')
+        if 'CopyOfferings' in request.POST:
+            print('copy time')
+            form = CopyOfferings(request.POST)
+            if form.is_valid():
+                term_id_from = form.cleaned_data['term_id_from']
+                term_id_to = form.cleaned_data['term_id_to']
+                fromTerm = models.Term.objects.get(pk=term_id_from)
+                toTerm = models.Term.objects.get(pk=term_id_to)
+                offerings = models.Offering.objects.filter(term=fromTerm)
+                for offering in offerings:
+                    newOffering = models.Offering.objects.create(instructor=offering.instructor, course=offering.course, term=toTerm)
+                    newOffering.save()
+                messages.success(request, 'Offerings have been successfully copied.')
+                return redirect('home')
+        elif 'CopyCategories' in request.POST:
+            form = CopyCategories(request.POST)
+            if form.is_valid():
+                track_id_from = form.cleaned_data['track_id_from']
+                track_id_to = form.cleaned_data['track_id_to']
+                fromTrack = models.Track.objects.get(pk=track_id_from)
+                toTrack = models.Track.objects.get(pk=track_id_to)
+                trackRequirements = models.TrackRequirement.objects.filter(track=fromTrack)
+                for tr in trackRequirements:
+                    newTR = models.TrackRequirement.objects.create(requiredHours=tr.requiredHours, category=tr.category, track=toTrack)
+                    newTR.save()
+
+                messages.success(request, 'Categories (track requirements) have been successfully copied to new track.')
+                return redirect('home')
+        messages.error(request, 'An error has occurred.  Please try again.')
+
+    terms = models.Term.objects.all()
+    tracks = models.Track.objects.all()
+
+    return render(request,
+                  'core/copy.html',
+                  {'terms' : terms,
+                   'tracks' : tracks, 
+                   })
 
 @login_required
 def faculty_home(request):
@@ -279,6 +323,14 @@ class NewEmailForm(forms.Form):
 
 class NewTerm(forms.Form):
     term_id = forms.CharField()
+
+class CopyOfferings(forms.Form):
+    term_id_from = forms.CharField()
+    term_id_to = forms.CharField()
+
+class CopyCategories(forms.Form):
+    track_id_from = forms.CharField()
+    track_id_to = forms.CharField()
 
 @login_required
 def faculty_term(request, termPlan_id):

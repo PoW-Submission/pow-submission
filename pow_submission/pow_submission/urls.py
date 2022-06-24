@@ -34,6 +34,7 @@ urlpatterns = [
     path('faculty/student_overview/<int:student_id>/', views.student_overview, name='student_overview'),
     path('faculty/approve_all/<int:student_id>/', views.approve_all, name='approve_all'),
     path('term/new', views.new_term, name='new_term'),
+    path('faculty/copy/', views.copy, name='copy'),
 
     url(r'^admin/', admin.site.urls),
 ]
