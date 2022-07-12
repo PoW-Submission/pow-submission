@@ -60,12 +60,14 @@ def home_view(request):
                   {'sitekey': sitekey})
     categories = models.Category.objects.filter(track=track)
     categoryDicts = []
+    totalApprovedHours = 0
     for category in categories:
         approvedHours = 0
         for termPlan in [x for x in termPlans if x.approval == 'Approved']:
             for plannedWork in termPlan.plannedWorks.all():
                 if category == plannedWork.category:
                     approvedHours += plannedWork.course.units
+                    totalApprovedHours += approvedHours
         trackRequirement = models.TrackRequirement.objects.get(category=category, track=track)
         categoryDicts.append({'category':category, 'hours':(int)(approvedHours), 'requiredHours':(trackRequirement.requiredHours)})
     termPlanDicts = []
@@ -87,7 +89,8 @@ def home_view(request):
                    'track': track,
                    'categories': categories,
                    'categoryDicts':categoryDicts,
-                   'showNoCategory':showNoCategory})
+                   'showNoCategory':showNoCategory,
+                   'totalApprovedHours':totalApprovedHours})
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -259,12 +262,14 @@ def student_overview(request, student_id):
     categories = models.Category.objects.filter(track=track)
 
     categoryDicts = []
+    totalApprovedHours = 0
     for category in categories:
         approvedHours = 0
         for termPlan in [x for x in termPlans if x.approval == 'Approved']:
             for plannedWork in termPlan.plannedWorks.all():
                 if category == plannedWork.category:
                     approvedHours += plannedWork.course.units
+                    totalApprovedHours += approvedHours
         trackRequirement = models.TrackRequirement.objects.get(category=category, track=track)
         categoryDicts.append({'category':category, 'hours':(int)(approvedHours), 'requiredHours':(trackRequirement.requiredHours)})
     termPlanDicts = []
@@ -287,7 +292,8 @@ def student_overview(request, student_id):
                    'track': track,
                    'categories': categories,
                    'categoryDicts':categoryDicts,
-                   'showNoCategory':showNoCategory})
+                   'showNoCategory':showNoCategory,
+                   'totalApprovedHours':totalApprovedHours})
 
 class faculty_configure(UpdateView): 
     model = ADUser
