@@ -6,6 +6,7 @@
   <div class="row mb-4 ">
     <div class="col-6">
       <h4>Copy offerings to new term</h4>
+      <div>*The target term should be a newly created term without any offerings assigned.</div>
       <form action="/faculty/copy/" method="post">
         {% csrf_token %}
         <div class="form-group">
@@ -29,6 +30,7 @@
     </div>
     <div class="col-6">
       <h4>Copy categories (requirements) to new track</h4>
+      <div>*The target track should be a newly created track without any requirements assined.</div>
       <form action="/faculty/copy/" method="post">
         {% csrf_token %}
         <div class="form-group">

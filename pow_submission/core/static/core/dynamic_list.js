@@ -24,6 +24,7 @@ function categoryWarning() {
           }
         } else {
           categoryElement.style.color = 'red';
+          showDisclaimer = true;
         }
       }
     }
