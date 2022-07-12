@@ -61,6 +61,31 @@
       <th>Term</th>
       <th>Completion Status</th>
     </tr></thead>
+
+    {% if showNoCategory %}
+    <tr><td><h5 style="color:red">No category assigned.  Please consult your advisor.</h5></td></tr>
+      {% for termPlan in termPlans %}
+        {% for plannedWork in termPlan.plannedWorks.all %}
+          {% if plannedWork.category == None %}
+            <tr class =
+              {% if termPlan.approval == "Approved"  %}"table-success{% endif %}
+              {% if termPlan.approval == "Submitted" %}"table-warning{% endif %}
+              {% if termPlan.approval == "Temp Approved" %}"table-primary{% endif %}
+              {% if termPlan.approval == "Denied" %}"alert-danger{% endif %}
+              {% if termPlan.approval == "" %}"{% endif %}">
+              <td scope="row">{{plannedWork.course.label}}</td>
+              <td scope="row">{{plannedWork.termPlan.term.label}}</td>
+              {% if plannedWork.completionStatus != None %}
+                <td scope="row">{{plannedWork.completionStatus}}</td>
+              {% else %}
+                <td/>
+              {% endif %}
+            </tr>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+
     {% for categoryDict in categoryDicts%}
       <tr><td><h5>{{categoryDict|get_value:'category'}} ({{categoryDict|get_value:'hours'}} hrs approved, {{categoryDict|get_value:'requiredHours'}} hrs required)</h5></td></tr>
       {% for termPlan in termPlans %}
@@ -84,32 +109,9 @@
         {% endfor %}
       {% endfor %}
     {% endfor %}
-    
-    {% if showNoCategory %}
-    <tr><td><h5>No category assigned.  Please consult your advisor.</h5></td></tr>
-      {% for termPlan in termPlans %}
-        {% for plannedWork in termPlan.plannedWorks.all %}
-          {% if plannedWork.category == None %}
-            <tr class =
-              {% if termPlan.approval == "Approved"  %}"table-success{% endif %}
-              {% if termPlan.approval == "Submitted" %}"table-warning{% endif %}
-              {% if termPlan.approval == "Temp Approved" %}"table-primary{% endif %}
-              {% if termPlan.approval == "Denied" %}"alert-danger{% endif %}
-              {% if termPlan.approval == "" %}"{% endif %}">
-              <td scope="row">{{plannedWork.course.label}}</td>
-              <td scope="row">{{plannedWork.termPlan.term.label}}</td>
-              {% if plannedWork.completionStatus != None %}
-                <td scope="row">{{plannedWork.completionStatus}}</td>
-              {% else %}
-                <td/>
-              {% endif %}
-            </tr>
-          {% endif %}
-        {% endfor %}
-      {% endfor %}
-    {% endif %}
 
   </table>
+
   {% endif %}
 </div>
 {% else %}
