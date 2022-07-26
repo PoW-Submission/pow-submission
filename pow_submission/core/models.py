@@ -5,6 +5,12 @@ from django.db.models.fields import BLANK_CHOICE_DASH
 from users.models import ADUser, PotentialUser
 from typedmodels.models import TypedModel
 
+class LowerEmailField(models.EmailField):
+    def __init__(self, *args, **kwargs):
+        super(LowerEmailField, self).__init__(*args, **kwargs)
+
+    def get_prep_value(self, value):
+        return str(value).lower()
 
 class Course(models.Model):
     label = models.TextField()
@@ -17,7 +23,7 @@ class Course(models.Model):
         return self.label
 
 class Faculty(models.Model):
-    email = models.EmailField(max_length=255, unique=True)
+    email = LowerEmailField(max_length=255, unique=True)
     name = models.TextField()
     is_active = models.BooleanField(default=True)
 
@@ -58,7 +64,9 @@ class Track(models.Model):
 
     def __str__(self):
         if self.program.upper() == 'PHD' or self.program.upper() == 'MS':
-            return self.label + ' (' + self.program + ') ' + ' starting ' + self.term.label
+            return self.label + ' (' + self.program + ') ' + 'starting ' + self.term.label
+        elif self.program.upper() == 'CERT' or self.program.upper() == 'CERTIFICATE':
+            return self.label + ' (Cert) starting ' + self.term.label
         else:
             return self.label + ' starting ' + self.term.label
 
@@ -97,12 +105,14 @@ class CurrentPlan(models.Model):
     termPlan = models.ForeignKey(TermPlan, related_name='currentPlans',  on_delete=models.CASCADE)
 
 class TermPlanForm(forms.ModelForm):
+
     class Meta:
         model = TermPlan
         fields = '__all__'
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.allowBlankCategory = False
         termPlan = self.instance
         term = termPlan.term
         track = termPlan.student.track
@@ -114,7 +124,7 @@ class TermPlanForm(forms.ModelForm):
             fieldName = 'plannedWork_%s' % ( i,)
             categoryName = 'category_%s' % (i,)
             statusName = 'status_%s' % (i,)
-            self.fields[fieldName] = forms.ModelChoiceField(queryset=Offering.objects.filter(term=term),
+            self.fields[fieldName] = forms.ModelChoiceField(queryset=Offering.objects.filter(term=term).order_by('course__label'),
                                                                                              required=False,
                                                             widget=forms.Select(attrs={'class':'w-100'}))
 
@@ -124,11 +134,11 @@ class TermPlanForm(forms.ModelForm):
                 self.initial[fieldName] = ""
 
             if i < (len(plannedWorks)) and plannedWorks[i].category:
-                self.fields[categoryName] = forms.ModelChoiceField(queryset=categories, required=False,
+                self.fields[categoryName] = forms.ModelChoiceField(queryset=categories.order_by('label'), required=False,
                                                                     widget=forms.Select(attrs={'class':'w-100'}))
                 self.initial[categoryName] = plannedWorks[i].category
             else:
-                self.fields[categoryName] = forms.ModelChoiceField(queryset=categories, required=False,
+                self.fields[categoryName] = forms.ModelChoiceField(queryset=categories.order_by('label'), required=False,
                                                                     widget=forms.Select(attrs={'class':'w-100'}))
                 self.initial[categoryName] = ""
 
@@ -169,9 +179,10 @@ class TermPlanForm(forms.ModelForm):
                       category = self.cleaned_data[categoryName]
                   else:
                       category = None
-                      for categoryChoice in categories:
-                          if (categoryChoice in offering.course.categories.all()):
-                              category = categoryChoice
+                      if self.allowBlankCategory == False:
+                        for categoryChoice in categories:
+                            if (categoryChoice in offering.course.categories.all()):
+                                category = categoryChoice
                   plannedWorks.append(PlannedWork(
                       termPlan=termPlan,
                       course=offering.course,
@@ -190,6 +201,9 @@ class TermPlanForm(forms.ModelForm):
         self.cleaned_data["student"] = termPlan.student
         self.cleaned_data["term"] = termPlan.term
 
+    def allow_blank(self, allowBlank):
+        self.allowBlankCategory = allowBlank
+    
     def save(self, deleteApproval):
         termPlan = self.instance
         termPlan.plannedWorks.all().delete()

@@ -36,6 +36,7 @@
           <i class="material-icons" style="font-size:16px;color:lightskyblue" data-toggle="tooltip" title="The category the course counts towards in the student's track plan.">help</i></th>
         <th>Completion Status</th>
       </tr></thead>
+      <input type="hidden" name="edit_category" id="edit_category" value="{{editCategory}}"/>
       {% for course_field, category_field, status_field in form.get_course_fields %}
         <tr>
           <td> {{ course_field }} </td>
@@ -54,9 +55,34 @@
       its default track plan category.**</p>
     </div>
     <button class="btn btn-primary mt-3" type="submit" name="Save">Save</button>
-    <button class="btn btn-primary mt-3" type="submit" name="ApproveButton">Approve</button>
+    <button class="btn btn-primary mt-3" type="button" data-toggle="modal" data-target="#staticBackdrop2">Approve</button>
     <button class="btn btn-danger mt-3" type="submit" name="DenyButton">Deny</button>
     <a class="btn btn-secondary mt-3" href="/faculty/student_overview/{{tp.student.pk}}" role="button">Back</a>
+
+
+    <div class="modal fade" id="staticBackdrop2" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel2" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="staticBackdropLabel2">Attach a comment to education leadership?</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="message-text" class="col-form-label">Questions or comments will be provided to education leadership upon approval:</label>
+              <textarea class="form-control" id="message-text" name="message-text"></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" name="ApproveButton"  class="btn btn-primary">Approve</button>
+          </div>
+        </div>
+      </div>
+    </div> 
 
     {% if currentPlans|length > 0  and tp.approval == 'Submitted' %}
     <h5 class='mt-4'>Previous Approval:</h5>
@@ -71,6 +97,15 @@
 
     
     </table>
+    <div class='mt-4'>
+      <h3>Qualifying Courses</h3>
+      {% for category in categories %}
+      <h5 class="mt-2">{{category.label}}</h5>
+      {% for course in category.courses.all|dictsort:'label' %}
+      <div>{{course.label}}</div>
+      {% endfor %}
+      {% endfor %}
+    </div>
   </div>
 
 

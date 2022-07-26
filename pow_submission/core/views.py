@@ -350,6 +350,9 @@ def faculty_term(request, termPlan_id):
     if (not student.advisor.email == request.user.email and (not request.user.always_notify)):
       return redirect('home')
     saveForm = models.TermPlanForm(request.POST, instance=termPlan)
+    saveForm.allow_blank(False)
+    if request.user.always_notify:
+        saveForm.allow_blank(True)
     track = student.track
     categories = models.Category.objects.filter(track=track)
     if request.method == 'POST':
@@ -365,7 +368,10 @@ def faculty_term(request, termPlan_id):
                     termPlan.first_approval = True
                     termPlan.approval='Submitted'
                     termPlan.save()
-                    email_message = '{} has approved term {} for {}.\n\nCourses:\n'.format(student.advisor.name, termPlan.term.label, student.email)
+                    email_message = '{} has approved term {} for {}.'.format(student.advisor.name, termPlan.term.label, student.email)
+                    if request.POST.get("message-text"):
+                        email_message += '\nA comment or question has been added to the submission:\n{}'.format(request.POST.get("message-text"))
+                    email_message += '\n\nCourses:\n'
                     plannedWorks = termPlan.plannedWorks.all()
                     for plannedWork in plannedWorks:
                         email_message += plannedWork.course.label + '\n'
@@ -445,6 +451,11 @@ def faculty_term(request, termPlan_id):
                 #use course.pk and categor.pk
                 defaultCategoryDict[offering.pk] = category.pk
     currentPlans = models.CurrentPlan.objects.filter(termPlan = termPlan.pk)
+
+    editCategory = False
+    if (request.user.always_notify):
+        editCategory = True
+
     return render(request, 
                   'core/faculty_term.html',
                   {'tp': termPlan,
@@ -453,7 +464,8 @@ def faculty_term(request, termPlan_id):
                    'categories': categories,
                    'form':form,
                    'defaultCategoryDict':defaultCategoryDict,
-                   'currentPlans':currentPlans})
+                   'currentPlans':currentPlans,
+                   'editCategory':editCategory})
 
 @login_required
 def student_term(request, termPlan_id):
@@ -461,6 +473,7 @@ def student_term(request, termPlan_id):
     if not (request.user.is_authenticated and request.user.is_faculty == False and tp.student == request.user):
         return redirect('home')
     saveForm = models.TermPlanForm(request.POST, instance=tp)
+    saveForm.allow_blank(False)
     track = request.user.track
     categories = models.Category.objects.filter(track=track)
     if request.method == 'POST':

@@ -9,6 +9,9 @@
     <div class="col-6">
       <h4>Student: {{student.email}}</h4>
       <h4>Track: {{student.track}}</h4>
+      <h4>Advisor: {{student.advisor.name}}
+        <a class="small" href="/faculty/configure/{{student.pk}}">[Change]</a>
+      </h4>
       <h4>Term Plans</h4>Click a term below for more details.
       <table>
       {% for tp in termPlans|dictsort:"id" %}
@@ -40,6 +43,7 @@
       <form action="/faculty/approve_all/{{ student.pk }}/" method="post">
         {% csrf_token %}
         <button class="btn btn-primary" type="submit" name="ApproveAll">Approve All Submissions</button>
+        <div>To approve or view a single term, please use the term links to the left.</div>
       </form>
     </div>
   </div>

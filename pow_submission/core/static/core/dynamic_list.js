@@ -1,6 +1,30 @@
+$('[id^=id_plannedWork_]').on('change', function() {
+  var value = this.value;
+  const last = this.id.charAt(this.id.length - 1);
+  var selectedCategory = document.getElementById("id_category_" + last).value;
+  var defaultCategoryElement = document.getElementById("table_" + value);
+  if (defaultCategoryElement != null) {
+    var defaultCategory = defaultCategoryElement.innerText;
+    if (selectedCategory != parseInt(defaultCategory)) {
+      categoryElement = document.getElementById("id_category_" + last)
+      categoryElement.value = parseInt(defaultCategory);
+    }
+  } else {
+    categoryElement = document.getElementById("id_category_" + last)
+    categoryElement.selectedIndex = 0
+  }
+  
+})
+
 $('select').on('change', function() {
   categoryWarning() ;
 })
+
+$('form').submit(function(e) {
+    $(':disabled').each(function(e) {
+        $(this).removeAttr('disabled');
+    })
+});
 
 function categoryWarning() {
     var showDisclaimer = false;
@@ -8,7 +32,6 @@ function categoryWarning() {
       var element = document.getElementById("id_plannedWork_" + i );
       var categoryElement = document.getElementById("id_category_" + i);
       var value = element.value;
-      console.log(value);
       if (value == "") {
           categoryElement.style.color = 'black';
       } else {
@@ -36,7 +59,6 @@ function categoryWarning() {
 }
 
 $('.blankOffering').on('change', function() {
-    console.log('hello')
     let $parent = $(this).parent()
     let $clone = $parent.clone()
     let $cloneElement = $clone.children('select').eq(0)
@@ -56,8 +78,6 @@ $('.blankOffering').on('change', function() {
 $(document).find('select[name^=plannedWork_offering_]:not(.blankOffering)').on('blur', hideElement)
 
 function hideElement() {
-    console.log('hide')
-    console.log($(this).attr('name'))
     var value = $(this).val();
     if (value === ''){
         $(this).hide();
@@ -65,15 +85,17 @@ function hideElement() {
 }
 
 $(window).on('load', function() {
-    console.log('load')
     categoryWarning()
     $("input[type='checkbox']").each( function() {
-        console.log('load each')
         $(this).closest("tr").find("select[name^='offering']").prop("disabled", !this.checked)
     })
+    if (document.getElementById("edit_category").value === "False"){
+        for (var i = 0; i < 5; i ++) {
+            document.getElementById("id_category_" + i).setAttribute("disabled", '')
+        }
+    }
 });
 
 $("input[type='checkbox']").on('change', function() {
-    console.log('checkbox')
     $(this).closest("tr").find("select[name^='offering']").prop("disabled", !this.checked)
 });

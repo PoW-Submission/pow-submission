@@ -4,6 +4,12 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import ugettext_lazy as _
 
+class LowerEmailField(models.EmailField):
+    def __init__(self, *args, **kwargs):
+        super(LowerEmailField, self).__init__(*args, **kwargs)
+
+    def get_prep_value(self, value):
+        return str(value).lower()
 
 class CustomUserManager(BaseUserManager):
     """
@@ -38,7 +44,7 @@ class CustomUserManager(BaseUserManager):
 
 class ADUser(AbstractUser):
     username = None
-    email = models.EmailField(max_length=255, unique=True)
+    email = LowerEmailField(max_length=255, unique=True)
     track = models.ForeignKey('core.Track', blank=True, null=True, on_delete=models.SET_NULL)
     advisor = models.ForeignKey('core.Faculty', blank=True, null=True, on_delete=models.SET_NULL)
     always_notify= models.BooleanField(default=False, help_text='For Education Leadership.  Will always receive email notifications and can finalize term plans.')
@@ -59,7 +65,7 @@ class LoginToken(models.Model):
     
 
 class PotentialUser(models.Model):
-    email = models.EmailField(max_length=255, unique=True)
+    email = LowerEmailField(max_length=255, unique=True)
     
     def __str__(self):
         return self.email
