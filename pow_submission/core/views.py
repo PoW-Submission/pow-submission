@@ -67,7 +67,7 @@ def home_view(request):
             for plannedWork in termPlan.plannedWorks.all():
                 if category == plannedWork.category:
                     approvedHours += plannedWork.course.units
-                    totalApprovedHours += approvedHours
+                    totalApprovedHours += plannedWork.course.units
         trackRequirement = models.TrackRequirement.objects.get(category=category, track=track)
         categoryDicts.append({'category':category, 'hours':(int)(approvedHours), 'requiredHours':(trackRequirement.requiredHours)})
     termPlanDicts = []
@@ -269,7 +269,7 @@ def student_overview(request, student_id):
             for plannedWork in termPlan.plannedWorks.all():
                 if category == plannedWork.category:
                     approvedHours += plannedWork.course.units
-                    totalApprovedHours += approvedHours
+                    totalApprovedHours += plannedWork.course.units
         trackRequirement = models.TrackRequirement.objects.get(category=category, track=track)
         categoryDicts.append({'category':category, 'hours':(int)(approvedHours), 'requiredHours':(trackRequirement.requiredHours)})
     termPlanDicts = []
