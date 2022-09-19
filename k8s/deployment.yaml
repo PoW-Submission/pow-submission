@@ -118,6 +118,11 @@ spec:
               secretKeyRef:
                   name: pow-secret
                   key: captcha_site_key
+        - name: LOGIN_URL
+          valueFrom:
+              secretKeyRef:
+                  name: pow-secret
+                  key: login_url
         ports:
         - containerPort: 3000
           protocol: TCP

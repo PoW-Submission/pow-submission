@@ -8,7 +8,7 @@ DEBUG = False
 
 # Login URL
 
-LOGIN_URL = "https://plan-of-work-dev.apps.dbmi.cloud"
+LOGIN_URL = os.getenv('LOGIN_URL', 'http://localhost:8000')
 
 #Email settings
 
