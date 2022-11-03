@@ -1,6 +1,6 @@
 from pow_submission.settings import *
 
-ALLOWED_HOSTS = ['plan-of-work.apps.dbmi.cloud', 'plan-of-work-dev.apps.dbmi.cloud']
+ALLOWED_HOSTS = ['plan-of-work.apps.dbmi.cloud', 'plan-of-work-dev.apps.dbmi.cloud', 'localhost', 'cafedb.ad.uams.edu']
 
 SECRET_KEY = os.getenv('POW_DJANGO_SECRET_KEY', '^%(#2k$5n08-i2=t8f%w3iy3^)g(=nfjy#%)!!rqx_0q3e#*ym')
 
