@@ -11,8 +11,17 @@ class CustomModelAdmin(admin.ModelAdmin):
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'25'})},
     }
 
+class CustomOfferingAdmin(admin.ModelAdmin):
+    formfield_overrides = {
+        models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'25'})},
+    }
+    list_display = ('__str__', 'term')
+
 for model in appModels:
     try:
-        admin.site.register(model, CustomModelAdmin)
+        if 'offering' == model._meta.model.__name__.lower():
+            admin.site.register(model, CustomOfferingAdmin)
+        else:
+            admin.site.register(model, CustomModelAdmin)
     except admin.sites.AlreadyRegistered:
         pass
